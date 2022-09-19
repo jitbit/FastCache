@@ -41,6 +41,15 @@ namespace UnitTests
 		}
 
 		[TestMethod]
+		public void TestRemove()
+		{
+			var cache = new FastCache<string, int>(); //now with default cleanup interval
+			cache.AddOrUpdate("42", 42, TimeSpan.FromMilliseconds(100));
+			cache.Remove("42");
+			Assert.IsFalse(cache.TryGet("42", out _));
+		}
+
+		[TestMethod]
 		public async Task TestGetOrAdd()
 		{
 			var cache = new FastCache<string, int>(); //now with default cleanup interval
