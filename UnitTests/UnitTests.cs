@@ -1,25 +1,48 @@
 using Jitbit.Utils;
 
+[assembly: Parallelize(Workers = 6, Scope = ExecutionScope.MethodLevel)]
+
 namespace UnitTests
 {
 	[TestClass]
 	public class UnitTests
 	{
 		[TestMethod]
-		public async Task TestFastCache()
+		public async Task TestGetSetCleanup()
 		{
 			var _cache = new FastCache<int, int>(cleanupJobInterval: 200);
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(100));
 			Assert.IsTrue(_cache.TryGet(42, out int v));
 			Assert.IsTrue(v == 42);
+
 			await Task.Delay(300);
 			Assert.IsTrue(_cache.Count == 0); //cleanup job has ran?
+		}
 
+		[TestMethod]
+		public async Task TestWithDefaultJobInterval()
+		{
 			var _cache2 = new FastCache<string, int>(); //now with default cleanup interval
 			_cache2.AddOrUpdate("42", 42, TimeSpan.FromMilliseconds(100));
 			Assert.IsTrue(_cache2.TryGet("42", out _));
 			await Task.Delay(150);
 			Assert.IsFalse(_cache2.TryGet("42", out _));
+		}
+
+		[TestMethod]
+		public async Task WhenItemIsUpdatedTtlIsExtended()
+		{
+			var _cache = new FastCache<int, int>();
+			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(200));
+
+			await Task.Delay(100);
+			Assert.IsTrue(_cache.TryGet(42, out int result) && result == 42); //not evicted
+
+			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(200));
+
+			await Task.Delay(150);
+
+			Assert.IsTrue(_cache.TryGet(42, out result) && result == 42);
 		}
 
 		[TestMethod]
