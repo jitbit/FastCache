@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -8,7 +9,7 @@ namespace Jitbit.Utils
 	/// <summary>
 	/// faster MemoryCache alternative. basically a concurrent dictionary with expiration
 	/// </summary>
-	public class FastCache<TKey, TValue>
+	public class FastCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 	{
 		private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new ConcurrentDictionary<TKey, TtlValue>();
 
@@ -78,6 +79,11 @@ namespace Jitbit.Utils
 				if (!kvp.Value.IsExpired())
 					yield return new KeyValuePair<TKey, TValue>(kvp.Key, kvp.Value.Value);
 			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return this.GetEnumerator();
 		}
 
 		public class TtlValue
