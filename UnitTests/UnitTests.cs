@@ -59,14 +59,14 @@ namespace UnitTests
 			var _cache = new FastCache<int, int>();
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(200));
 
-			await Task.Delay(100);
+			await Task.Delay(50);
 			Assert.IsTrue(_cache.TryGet(42, out int result) && result == 42); //not evicted
 
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(300));
 
-			await Task.Delay(150);
+			await Task.Delay(250);
 
-			Assert.IsTrue(_cache.TryGet(42, out result) && result == 42);
+			Assert.IsTrue(_cache.TryGet(42, out result) && result == 42); //still not evicted
 		}
 
 		[TestMethod]
