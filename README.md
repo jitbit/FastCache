@@ -2,6 +2,8 @@
 
 6x-10x faster alternative to MemoryCache
 
+[![NuGet version](https://badge.fury.io/nu/Jitbit.FastCache.svg)](https://badge.fury.io/nu/Jitbit.FastCache)
+
 ## TL;DR
 
 Bascially it's just a `ConcurrentDictionary` with expiration.
