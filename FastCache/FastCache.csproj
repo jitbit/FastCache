@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>Jitbit.FastCache</PackageId>
+    <Title>FastCache</Title>
+    <Authors>Alex from Jitbit</Authors>
+    <Product>FastCache</Product>
+    <PackageProjectUrl>https://github.com/jitbit/fastcache</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/jitbit/fastcache</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+	<Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
