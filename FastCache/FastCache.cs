@@ -75,7 +75,8 @@ namespace Jitbit.Utils
 		{
 			foreach (var kvp in _dict)
 			{
-				yield return new KeyValuePair<TKey, TValue>(kvp.Key, kvp.Value.Value);
+				if (!kvp.Value.IsExpired())
+					yield return new KeyValuePair<TKey, TValue>(kvp.Key, kvp.Value.Value);
 			}
 		}
 
