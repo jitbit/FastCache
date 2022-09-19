@@ -20,6 +20,18 @@ namespace UnitTests
 		}
 
 		[TestMethod]
+		public async Task Shortdelay()
+		{
+			var cache = new FastCache<int, int>();
+			cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(500));
+
+			await Task.Delay(50);
+
+			Assert.IsTrue(cache.TryGet(42, out int result)); //not evicted
+			Assert.IsTrue(result == 42);
+		}
+
+		[TestMethod]
 		public async Task TestWithDefaultJobInterval()
 		{
 			var _cache2 = new FastCache<string, int>(); //now with default cleanup interval
