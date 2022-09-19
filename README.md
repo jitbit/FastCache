@@ -3,6 +3,7 @@
 6x-10x faster alternative to MemoryCache
 
 [![NuGet version](https://badge.fury.io/nu/Jitbit.FastCache.svg)](https://badge.fury.io/nu/Jitbit.FastCache)
+[![.NET](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml/badge.svg)](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml)
 
 ## TL;DR
 
@@ -36,8 +37,8 @@ Another tradeoff: MemoryCache watches the used memory, and evicts items once it 
 ```
 |               Method |      Mean |     Error |   StdDev |   Gen0 | Allocated |
 |--------------------- |----------:|----------:|---------:|-------:|----------:|
-|      FastCacheLookup |  71.99 ns | 26.748 ns | 1.466 ns |      - |         - |
-|    MemoryCacheLookup | 382.59 ns | 35.983 ns | 1.972 ns | 0.0200 |     128 B |
-|   FastCacheAddRemove |  93.03 ns |  8.605 ns | 0.472 ns | 0.0254 |     160 B |
-| MemoryCacheAddRemove | 505.47 ns | 76.733 ns | 4.206 ns | 0.0515 |     328 B |
+|      FastCacheLookup |  67.15 ns |  2.582 ns | 0.142 ns |      - |         - |
+|    MemoryCacheLookup | 426.60 ns | 60.162 ns | 3.298 ns | 0.0200 |     128 B |
+|   FastCacheAddRemove |  99.97 ns | 12.040 ns | 0.660 ns | 0.0254 |     160 B |
+| MemoryCacheAddRemove | 710.70 ns | 32.415 ns | 1.777 ns | 0.0515 |     328 B |
 ```
