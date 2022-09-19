@@ -2,7 +2,7 @@
 
 6x-10x faster alternative to MemoryCache
 
-[![NuGet version](https://badge.fury.io/nu/Jitbit.FastCache.svg)](https://badge.fury.io/nu/Jitbit.FastCache)
+[![NuGet version](https://badge.fury.io/nu/jitbit.fastcache.svg)](https://badge.fury.io/nu/jitbit.fastcache)
 [![.NET](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml/badge.svg)](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml)
 
 ## TL;DR
