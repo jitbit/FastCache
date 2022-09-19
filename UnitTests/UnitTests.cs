@@ -57,7 +57,7 @@ namespace UnitTests
 		public async Task WhenItemIsUpdatedTtlIsExtended()
 		{
 			var _cache = new FastCache<int, int>();
-			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(200));
+			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(300));
 
 			await Task.Delay(50);
 			Assert.IsTrue(_cache.TryGet(42, out int result)); //not evicted
