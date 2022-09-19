@@ -30,6 +30,17 @@ namespace UnitTests
 		}
 
 		[TestMethod]
+		public async Task TestGetOrAdd()
+		{
+			var cache = new FastCache<string, int>(); //now with default cleanup interval
+			cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
+			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1024);
+			await Task.Delay(100);
+
+			Assert.IsFalse(cache.TryGet("key", out _));
+		}
+
+		[TestMethod]
 		public async Task WhenItemIsUpdatedTtlIsExtended()
 		{
 			var _cache = new FastCache<int, int>();
