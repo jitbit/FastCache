@@ -2,7 +2,7 @@
 
 6x-10x faster alternative to MemoryCache
 
-##TL;DR
+## TL;DR
 
 Bascially it's just a `ConcurrentDictionary` with expiration.
 
