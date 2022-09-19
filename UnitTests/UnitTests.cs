@@ -60,13 +60,15 @@ namespace UnitTests
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(200));
 
 			await Task.Delay(50);
-			Assert.IsTrue(_cache.TryGet(42, out int result) && result == 42); //not evicted
+			Assert.IsTrue(_cache.TryGet(42, out int result)); //not evicted
+			Assert.IsTrue(result == 42);
 
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(300));
 
 			await Task.Delay(250);
 
-			Assert.IsTrue(_cache.TryGet(42, out result) && result == 42); //still not evicted
+			Assert.IsTrue(_cache.TryGet(42, out int result2)); //still not evicted
+			Assert.IsTrue(result2 == 42);
 		}
 
 		[TestMethod]
