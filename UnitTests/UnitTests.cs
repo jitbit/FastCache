@@ -35,7 +35,7 @@ namespace UnitTests
 			var cache = new FastCache<string, int>(); //now with default cleanup interval
 			cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
 			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1024);
-			await Task.Delay(100);
+			await Task.Delay(110);
 
 			Assert.IsFalse(cache.TryGet("key", out _));
 		}
