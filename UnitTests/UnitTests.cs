@@ -1,6 +1,5 @@
 using Jitbit.Utils;
 
-[assembly: Parallelize(Workers = 6, Scope = ExecutionScope.MethodLevel)]
 
 namespace UnitTests
 {
@@ -66,7 +65,7 @@ namespace UnitTests
 		}
 
 		[TestMethod]
-		public async Task WhenItemIsUpdatedTtlIsExtended()
+		public async Task TestTllExtended()
 		{
 			var _cache = new FastCache<int, int>();
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(300));
