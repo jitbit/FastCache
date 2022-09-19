@@ -16,7 +16,7 @@ namespace UnitTests
 			Assert.IsTrue(v == 42);
 
 			await Task.Delay(300);
-			Assert.IsTrue(_cache.Count == 0); //cleanup job has ran?
+			Assert.IsTrue(_cache.Count == 0); //cleanup job has run?
 		}
 
 		[TestMethod]

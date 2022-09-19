@@ -33,8 +33,14 @@ namespace Jitbit.Utils
 			}
 		}
 
+		/// <summary>
+		/// Returns total count, including expired items too, if they were not yet cleaned by the eviction job
+		/// </summary>
 		public int Count => _dict.Count;
 
+		/// <summary>
+		/// Adds an item to cache it does not exist, updated the existing item if it does. Updaeting an item resets its TTL.
+		/// </summary>
 		public void AddOrUpdate(TKey key, TValue value, TimeSpan ttl)
 		{
 			var ttlValue = new TtlValue(value, ttl);
@@ -42,6 +48,12 @@ namespace Jitbit.Utils
 			_dict.AddOrUpdate(key, ttlValue, (k, v) => ttlValue);
 		}
 
+		/// <summary>
+		/// Attempts to get a value by key
+		/// </summary>
+		/// <param name="key">The key to get</param>
+		/// <param name="value">When method returns, contains the object with the key if found, otherwise default value of the type</param>
+		/// <returns>True if value exists, otherwise false</returns>
 		public bool TryGet(TKey key, out TValue value)
 		{
 			value = default(TValue);
@@ -59,6 +71,9 @@ namespace Jitbit.Utils
 			return true;
 		}
 
+		/// <summary>
+		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
+		/// </summary>
 		public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)
 		{
 			if (TryGet(key, out var value))
