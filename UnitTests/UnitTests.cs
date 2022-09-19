@@ -62,7 +62,7 @@ namespace UnitTests
 			await Task.Delay(100);
 			Assert.IsTrue(_cache.TryGet(42, out int result) && result == 42); //not evicted
 
-			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(200));
+			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(300));
 
 			await Task.Delay(150);
 
