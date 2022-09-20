@@ -24,6 +24,14 @@ Compared to `System.Runtime.Caching.MemoryCache` and `Microsoft.Extensions.Cachi
 
 ## Usage
 
+Install via nuget
+
+```
+Install-Package Jitbit.FastCache
+```
+
+Then use
+
 ```csharp
 var cache = new FastCache<string, int>();
 cache.AddOrUpdate("key", 42, TimeSpan.FromMinutes(1));
