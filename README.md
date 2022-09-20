@@ -9,12 +9,18 @@
 
 Bascially it's just a `ConcurrentDictionary` with expiration.
 
-## Why FastCache is better than System.Runtime.Caching.MemoryCache and Microsoft.Extensions.Caching.MemoryCache.
+## How is FastCache better
 
-* 6X faster read times than MemeoryCache.
-* 10x faster wites than MemoryCache
-* Thread safe and atomic writes
-* MemoryCache's come with performnce counters that can't be turned off
+Compared to `System.Runtime.Caching.MemoryCache` and `Microsoft.Extensions.Caching.MemoryCache` FastCache is
+
+* 6X faster reads than MemoryCache.
+* 10x faster writes than MemoryCache
+* Thread safe and atomic
+* Generic (strongly typed keys and values) to avoid boxing primitive types
+* MemoryCache uses string keys only, so it allocates strings for keying
+* MemoryCache comes with performnce counters that can't be turned off
+* MemoryCache uses heuristic and black magic to evict keys under memory pressure
+* MemoryCache uses more memory, can crash during a key scan
 
 ## Usage
 
@@ -28,9 +34,9 @@ cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
 
 ## Tradeoffs
 
-FastCache uses `Environment.TickCount` which is 26x times faster tham `DateTime.Now`. But `Environment.TickCount` is limited to `Int32`. Which means it reset to `int.MinValue` once overflowed. In practice this means you cannot cache stuff for more than ~25 days (2.4 billion milliseconds).
+FastCache uses `Environment.TickCount` which is 26x times faster tham `DateTime.Now`. But `Environment.TickCount` is limited to `Int32`. Which means it resets to `int.MinValue` once overflowed. In practice this means you cannot cache stuff for more than ~25 days (2.4 billion milliseconds).
 
-Another tradeoff: MemoryCache watches the used memory, and evicts items once it senses memory pressure. **FastCache does not do that** it is up to you. It's just a dictionary.
+Another tradeoff: MemoryCache watches the used memory, and evicts items once it senses memory pressure. **FastCache does not do that** it is up to you to keep your caches reasonably sized. After all, it's just a dictionary.
 
 ## Benchmarks
 
