@@ -18,7 +18,7 @@ Compared to `System.Runtime.Caching.MemoryCache` and `Microsoft.Extensions.Cachi
 * Thread safe and atomic
 * Generic (strongly typed keys and values) to avoid boxing primitive types
 * MemoryCache uses string keys only, so it allocates strings for keying
-* MemoryCache comes with performnce counters that can't be turned off
+* MemoryCache comes with performфnce counters that can't be turned off
 * MemoryCache uses heuristic and black magic to evict keys under memory pressure
 * MemoryCache uses more memory, can crash during a key scan
 
