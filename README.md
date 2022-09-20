@@ -7,7 +7,7 @@
 
 ## TL;DR
 
-Bascially it's just a `ConcurrentDictionary` with expiration.
+Basically it's just a `ConcurrentDictionary` with expiration.
 
 ## Benchmarks under Windows
 
