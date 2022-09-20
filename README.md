@@ -34,9 +34,9 @@ cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
 
 ## Tradeoffs
 
-FastCache uses `Environment.TickCount` which is 26x times faster tham `DateTime.Now`. But `Environment.TickCount` is limited to `Int32`. Which means it resets to `int.MinValue` once overflowed. In practice this means you cannot cache stuff for more than ~25 days (2.4 billion milliseconds).
+FastCache uses `Environment.TickCount` to monitor TTL, which is 26x times faster than using `DateTime.Now`. But `Environment.TickCount` is limited to `Int32`. Which means it resets to `int.MinValue` once overflowed. This is not a problem, we do have workarounds for that. But in practice this means you cannot cache stuff for more than ~25 days (2.4 billion milliseconds).
 
-Another tradeoff: MemoryCache watches the used memory, and evicts items once it senses memory pressure. **FastCache does not do that** it is up to you to keep your caches reasonably sized. After all, it's just a dictionary.
+Another tradeoff: MemoryCache watches memory usage, and evicts items once it senses memory pressure. **FastCache does not do that** it is up to you to keep your caches reasonably sized. After all, it's just a dictionary.
 
 ## Benchmarks
 
