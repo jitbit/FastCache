@@ -52,9 +52,18 @@ Then use
 
 ```csharp
 var cache = new FastCache<string, int>();
-cache.AddOrUpdate("key", 42, TimeSpan.FromMinutes(1));
-cache.TeyGet("key", out int value);
-cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
+
+cache.AddOrUpdate(
+	key: "answer",
+	value: 42,
+	ttl: TimeSpan.FromMinutes(1));
+
+cache.TeyGet("answer", out int value); //value is "42"
+
+cache.GetOrAdd(
+	key: "answer",
+	valueFactory: k => 42,
+	ttl: TimeSpan.FromMilliseconds(100));
 
 ```
 
