@@ -1,6 +1,6 @@
 # FastCache
 
-6x-10x faster alternative to MemoryCache
+7x-10x faster alternative to MemoryCache. A high-performance, lighweight (8KB dll) and thread-safe memory cache for .NET.
 
 [![NuGet version](https://badge.fury.io/nu/jitbit.fastcache.svg)](https://badge.fury.io/nu/jitbit.fastcache)
 [![.NET](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml/badge.svg)](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml)
@@ -18,7 +18,7 @@ Bascially it's just a `ConcurrentDictionary` with expiration.
 |   FastCacheAddRemove |  99.97 ns | 12.040 ns | 0.660 ns | 0.0254 |     160 B |
 | MemoryCacheAddRemove | 710.70 ns | 32.415 ns | 1.777 ns | 0.0515 |     328 B |
 
-## Benchmarks under Linux
+## Benchmarks under Linux (Ubuntu, docker)
 
 |               Method |        Mean |      Error |    StdDev |   Gen0 | Allocated |
 |--------------------- |------------:|-----------:|----------:|-------:|----------:|
@@ -31,7 +31,7 @@ Bascially it's just a `ConcurrentDictionary` with expiration.
 
 Compared to `System.Runtime.Caching.MemoryCache` and `Microsoft.Extensions.Caching.MemoryCache` FastCache is
 
-* 7X faster reads than MemoryCache.
+* 7X faster reads than MemoryCache (10X under Linux)
 * 10x faster writes than MemoryCache
 * Thread safe and atomic
 * Generic (strongly typed keys and values) to avoid boxing/unboxing primitive types
@@ -75,4 +75,4 @@ FastCache uses `Environment.TickCount` to monitor items' TTL. `Environment.TickC
 
 The above is no longer valid, we have switched to .NET 6 targeting and now use `TickCount64` which is free of this problem.
 
-Another tradeoff: MemoryCache watches memory usage, and evicts items once it senses memory pressure. **FastCache does not do that** it is up to you to keep your caches reasonably sized. After all, it's just a dictionary.
+Another tradeoff: MemoryCache watches memory usage, and evicts items once it senses memory pressure. **FastCache does not do any of that** it is up to you to keep your caches reasonably sized. After all, it's just a dictionary.
