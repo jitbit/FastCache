@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageId>Jitbit.FastCache</PackageId>
     <Title>FastCache</Title>
     <Authors>Alex from Jitbit</Authors>

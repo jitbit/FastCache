@@ -104,34 +104,19 @@ namespace Jitbit.Utils
 		public class TtlValue
 		{
 			public readonly TValue Value;
-			public readonly int TickCountWhenToKill;
+			public readonly long TickCountWhenToKill;
 
 			public TtlValue(TValue value, TimeSpan ttl)
 			{
 				Value = value;
-				TickCountWhenToKill = GetTickCount() + (int)ttl.TotalMilliseconds;
+				TickCountWhenToKill = Environment.TickCount64 + (long)ttl.TotalMilliseconds;
 			}
 
 			public bool IsExpired()
 			{
-				//Environment.TickCount is int32. When it reaches 2,4 billion it cycles back to -2.4 billion
-				//We can't just compare "Environment.TickCount > item.TickCountWhenToKill"
-				//TickCount can be super low, close to int.MinValue, but TickCountWhenToKill will be close to MaxValue
-				//and the "Environment.TickCount > item.TickCountWhenToKill" will be false, so the item won't be expired.
-				//Or vice versa Item.TickCountWhenToKill can also cycle back to MinValue, and Environment.TickCount > item.TickCountWhenToKill will be true, so item will expire when no needed
-
-				//so we use "Environment.TickCount - item.TickCountWhenToKill" it is positive when "normal" values are used
-				//and will be negatve if the difference is too big
-				var difference = GetTickCount() - TickCountWhenToKill;
+				var difference = Environment.TickCount64 - TickCountWhenToKill;
 				return difference > 0;
 			}
-		}
-
-		public static int TickCountShiftForUnitTests = 0;
-
-		private static int GetTickCount()
-		{
-			return TickCountShiftForUnitTests + Environment.TickCount;
 		}
 	}
 }

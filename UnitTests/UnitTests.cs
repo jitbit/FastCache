@@ -74,7 +74,7 @@ namespace UnitTests
 		}
 
 		[TestMethod]
-		public async Task TestTllExtended()
+		public async Task TestTtlExtended()
 		{
 			var _cache = new FastCache<int, int>();
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(300));
@@ -89,32 +89,6 @@ namespace UnitTests
 
 			Assert.IsTrue(_cache.TryGet(42, out int result2)); //still not evicted
 			Assert.IsTrue(result2 == 42);
-		}
-
-		[TestMethod]
-		public async Task TestFastCacheOverflowLogic()
-		{
-			//test int-based overflow logic used in FastCache
-
-			FastCache<int, int>.TickCountShiftForUnitTests = int.MaxValue - Environment.TickCount - 200;
-			var ttl = new FastCache<int, int>.TtlValue(123, TimeSpan.FromMilliseconds(300));
-			await Task.Delay(400);
-			Assert.IsTrue(ttl.IsExpired());
-
-			FastCache<int, int>.TickCountShiftForUnitTests = int.MaxValue - Environment.TickCount - 200;
-			ttl = new FastCache<int, int>.TtlValue(123, TimeSpan.FromMilliseconds(300));
-			await Task.Delay(100);
-			Assert.IsFalse(ttl.IsExpired());
-
-			FastCache<int, int>.TickCountShiftForUnitTests = int.MaxValue - Environment.TickCount - 200;
-			ttl = new FastCache<int, int>.TtlValue(123, TimeSpan.FromMilliseconds(50));
-			await Task.Delay(100);
-			Assert.IsTrue(ttl.IsExpired());
-
-			FastCache<int, int>.TickCountShiftForUnitTests = int.MaxValue - Environment.TickCount - 200;
-			ttl = new FastCache<int, int>.TtlValue(123, TimeSpan.FromMilliseconds(50));
-			await Task.Delay(300);
-			Assert.IsTrue(ttl.IsExpired());
 		}
 	}
 }
