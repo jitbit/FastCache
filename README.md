@@ -5,7 +5,11 @@
 [![NuGet version](https://badge.fury.io/nu/jitbit.fastcache.svg)](https://badge.fury.io/nu/jitbit.fastcache)
 [![.NET](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml/badge.svg)](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml)
 
-## Benchmarks
+## TL;DR
+
+Bascially it's just a `ConcurrentDictionary` with expiration.
+
+## Benchmarks under Windows
 
 |               Method |      Mean |     Error |   StdDev |   Gen0 | Allocated |
 |--------------------- |----------:|----------:|---------:|-------:|----------:|
@@ -14,9 +18,14 @@
 |   FastCacheAddRemove |  99.97 ns | 12.040 ns | 0.660 ns | 0.0254 |     160 B |
 | MemoryCacheAddRemove | 710.70 ns | 32.415 ns | 1.777 ns | 0.0515 |     328 B |
 
-## TL;DR
+## Benchmarks under Linux
 
-Bascially it's just a `ConcurrentDictionary` with expiration.
+|               Method |        Mean |      Error |    StdDev |   Gen0 | Allocated |
+|--------------------- |------------:|-----------:|----------:|-------:|----------:|
+|      FastCacheLookup |    94.97 ns |   3.250 ns |  0.178 ns |      - |         - |
+|    MemoryCacheLookup | 1,051.69 ns |  64.904 ns |  3.558 ns | 0.0191 |     128 B |
+|   FastCacheAddRemove |   148.32 ns |  25.766 ns |  1.412 ns | 0.0253 |     160 B |
+| MemoryCacheAddRemove | 1,120.75 ns | 767.666 ns | 42.078 ns | 0.0515 |     328 B |
 
 ## How is FastCache better
 
