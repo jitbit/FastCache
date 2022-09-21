@@ -33,7 +33,7 @@ Compared to `System.Runtime.Caching.MemoryCache` and `Microsoft.Extensions.Cachi
 
 * 7X faster reads (11X under Linux!)
 * 10x faster writes
-* Thread safe and atomic
+* Thread safe and [atomic](Atomic.md)
 * Generic (strongly typed keys and values) to avoid boxing/unboxing primitive types
 * MemoryCache uses string keys only, so it allocates strings for keying
 * MemoryCache comes with performance counters that can't be turned off
