@@ -33,7 +33,7 @@ namespace UnitTests
 		[TestMethod]
 		public async Task TestWithDefaultJobInterval()
 		{
-			var _cache2 = new FastCache<string, int>(); //now with default cleanup interval
+			var _cache2 = new FastCache<string, int>();
 			_cache2.AddOrUpdate("42", 42, TimeSpan.FromMilliseconds(100));
 			Assert.IsTrue(_cache2.TryGet("42", out _));
 			await Task.Delay(150);
@@ -43,7 +43,7 @@ namespace UnitTests
 		[TestMethod]
 		public void TestRemove()
 		{
-			var cache = new FastCache<string, int>(); //now with default cleanup interval
+			var cache = new FastCache<string, int>();
 			cache.AddOrUpdate("42", 42, TimeSpan.FromMilliseconds(100));
 			cache.Remove("42");
 			Assert.IsFalse(cache.TryGet("42", out _));
@@ -52,7 +52,7 @@ namespace UnitTests
 		[TestMethod]
 		public async Task TestTryAdd()
 		{
-			var cache = new FastCache<string, int>(); //now with default cleanup interval
+			var cache = new FastCache<string, int>();
 			Assert.IsTrue(cache.TryAdd("42", 42, TimeSpan.FromMilliseconds(100)));
 			Assert.IsFalse(cache.TryAdd("42", 42, TimeSpan.FromMilliseconds(100)));
 
@@ -64,12 +64,30 @@ namespace UnitTests
 		[TestMethod]
 		public async Task TestGetOrAdd()
 		{
-			var cache = new FastCache<string, int>(); //now with default cleanup interval
+			var cache = new FastCache<string, int>();
 			cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
 			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1024);
 			await Task.Delay(110);
 
 			Assert.IsFalse(cache.TryGet("key", out _));
+		}
+
+		[TestMethod]
+		public async Task TestAtomicness()
+		{
+			int i = 0;
+			
+			var cache = new FastCache<int, int>();
+			cache.TryAdd(42, 42, TimeSpan.FromMilliseconds(50)); //add item with short TTL
+
+			await Task.Delay(100); //wait for tha value to expire
+
+			await TestHelper.RunConcurrently(20, () => {
+				if (cache.TryAdd(42, 42, TimeSpan.FromSeconds(1)))
+					i++;
+			});
+
+			Assert.IsTrue(i == 1, i.ToString());
 		}
 
 		[TestMethod]
