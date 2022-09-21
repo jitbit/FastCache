@@ -1,6 +1,6 @@
 # Atomicness
 
-When it comes ot atomicness, the buggest challenge is to check "item exists" and "item not expired" in one go.
+When it comes ot atomicness, the biggest challenge is to check "item exists" and "item not expired" in one go.
 
 When an item was "found but is expired" - we need to treat this as "not found" and discard it. For that we either need to use a lock
 so that the the three steps "exist? expired? remove!" are performed atomically. Otherwise another tread might chip in,
