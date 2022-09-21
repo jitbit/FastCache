@@ -50,6 +50,18 @@ namespace UnitTests
 		}
 
 		[TestMethod]
+		public async Task TestTryAdd()
+		{
+			var cache = new FastCache<string, int>(); //now with default cleanup interval
+			Assert.IsTrue(cache.TryAdd("42", 42, TimeSpan.FromMilliseconds(100)));
+			Assert.IsFalse(cache.TryAdd("42", 42, TimeSpan.FromMilliseconds(100)));
+
+			await Task.Delay(120); //wait for it to expire
+
+			Assert.IsTrue(cache.TryAdd("42", 42, TimeSpan.FromMilliseconds(100)));
+		}
+
+		[TestMethod]
 		public async Task TestGetOrAdd()
 		{
 			var cache = new FastCache<string, int>(); //now with default cleanup interval

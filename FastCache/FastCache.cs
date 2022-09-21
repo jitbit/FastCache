@@ -72,6 +72,20 @@ namespace Jitbit.Utils
 		}
 
 		/// <summary>
+		/// Attempts to add a key/value item
+		/// </summary>
+		/// <param name="key">The key to add</param>
+		/// <param name="value">The value to add</param>
+		/// <returns>True if value was added, otherwise false (already exists)</returns>
+		public bool TryAdd(TKey key, TValue value, TimeSpan ttl)
+		{
+			if (TryGet(key, out _))
+				return false;
+
+			return _dict.TryAdd(key, new TtlValue(value, ttl));
+		}
+
+		/// <summary>
 		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
 		/// </summary>
 		public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)
