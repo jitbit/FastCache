@@ -27,7 +27,7 @@ expired?
 remove by key AND value
 ```
 
-If another thread chipped in while we were in the middle of checking if it's expired or not, and recorded a new value - we won't remove it.
+[Here](FastCache/FastCache.cs#L74) If another thread chipped in while we were in the middle of checking if it's expired or not, and recorded a new value - we won't remove it.
 
 ## Why `lock` is bad
 
