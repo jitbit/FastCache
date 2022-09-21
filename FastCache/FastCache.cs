@@ -13,7 +13,7 @@ namespace Jitbit.Utils
 	{
 		private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new ConcurrentDictionary<TKey, TtlValue>();
 
-		private Timer _cleanUpTimer;
+		private readonly Timer _cleanUpTimer;
 
 		/// <summary>
 		/// create cache
@@ -39,8 +39,11 @@ namespace Jitbit.Utils
 		public int Count => _dict.Count;
 
 		/// <summary>
-		/// Adds an item to cache it does not exist, updated the existing item if it does. Updaeting an item resets its TTL.
+		/// Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL.
 		/// </summary>
+		/// <param name="key">The key to add</param>
+		/// <param name="value">The value to add</param>
+		/// <param name="ttl">TTL of the item</param>
 		public void AddOrUpdate(TKey key, TValue value, TimeSpan ttl)
 		{
 			var ttlValue = new TtlValue(value, ttl);
@@ -76,6 +79,7 @@ namespace Jitbit.Utils
 		/// </summary>
 		/// <param name="key">The key to add</param>
 		/// <param name="value">The value to add</param>
+		/// <param name="ttl">TTL of the item</param>
 		/// <returns>True if value was added, otherwise false (already exists)</returns>
 		public bool TryAdd(TKey key, TValue value, TimeSpan ttl)
 		{
@@ -88,6 +92,9 @@ namespace Jitbit.Utils
 		/// <summary>
 		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
 		/// </summary>
+		/// <param name="key">The key to add</param>
+		/// <param name="valueFactory">The factory function used to generate the item for the key</param>
+		/// <param name="ttl">TTL of the item</param>
 		public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)
 		{
 			if (TryGet(key, out var value))
@@ -96,6 +103,10 @@ namespace Jitbit.Utils
 			return _dict.GetOrAdd(key, k => new TtlValue(valueFactory(key), ttl)).Value;
 		}
 
+		/// <summary>
+		/// Tries to remove item with the specified key
+		/// </summary>
+		/// <param name="key">The key of the element to remove</param>
 		public void Remove(TKey key)
 		{
 			_dict.TryRemove(key, out _);
@@ -115,7 +126,7 @@ namespace Jitbit.Utils
 			return this.GetEnumerator();
 		}
 
-		public class TtlValue
+		private class TtlValue
 		{
 			public readonly TValue Value;
 			public readonly long TickCountWhenToKill;

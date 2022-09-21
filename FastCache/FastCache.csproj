@@ -13,6 +13,7 @@
 	<Version>1.0.3</Version>
 	<PackageTags>cache;caching;MemoryCache</PackageTags>
 	<Description>Fastest in-memoery cache for .NET</Description>
+	<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
