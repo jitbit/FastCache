@@ -27,7 +27,7 @@ expired?
 remove by key AND value
 ```
 
-If another thread has modified the value - it won't remove it.
+If another thread chipped in while we were in the middle of checking if it's expired or not, and recorded a new value - we won't remove it.
 
 Locks suck becasue add extra 50ns to benchmark, so it becomes 110ns instead of 70ns which sucks.
 So - no locks then!
