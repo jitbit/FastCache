@@ -73,7 +73,7 @@ namespace UnitTests
 		}
 
 		[TestMethod]
-		public async Task TestAtomicness()
+		public async Task TestTryAddAtomicness()
 		{
 			int i = 0;
 			
@@ -87,6 +87,28 @@ namespace UnitTests
 					i++;
 			});
 
+			Assert.IsTrue(i == 1, i.ToString());
+		}
+
+		[TestMethod]
+		public async Task TestGetOrAddAtomicNess()
+		{
+			int i = 0;
+
+			var cache = new FastCache<int, int>();
+			
+			cache.GetOrAdd(42, k => {
+				i++;
+				return 1024;
+			}, TimeSpan.FromMilliseconds(100));
+
+
+			await TestHelper.RunConcurrently(20, () => {
+				if (cache.TryAdd(42, 42, TimeSpan.FromSeconds(1)))
+					i++;
+			});
+
+			//test that add factory was called only once
 			Assert.IsTrue(i == 1, i.ToString());
 		}
 
