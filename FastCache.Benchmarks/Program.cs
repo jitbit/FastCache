@@ -42,6 +42,15 @@ public class BenchMark
 	}
 
 	[Benchmark]
+	public void FastCacheGetOrAdd()
+	{
+		_cache.GetOrAdd("test123", k => 123, TimeSpan.FromSeconds(1));
+		_cache.GetOrAdd("test234", k => 124, TimeSpan.FromSeconds(1));
+		_cache.GetOrAdd("test673", k => 125, TimeSpan.FromSeconds(1));
+		_cache.GetOrAdd("test987", k => 126, TimeSpan.FromSeconds(1));
+	}
+
+	[Benchmark]
 	public void FastCacheAddRemove()
 	{
 		_cache.AddOrUpdate("1111", 42, TimeSpan.FromMinutes(1));

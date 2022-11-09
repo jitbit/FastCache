@@ -9,7 +9,7 @@ namespace Jitbit.Utils
 	/// <summary>
 	/// faster MemoryCache alternative. basically a concurrent dictionary with expiration
 	/// </summary>
-	public class FastCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
+	public class FastCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable
 	{
 		private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new ConcurrentDictionary<TKey, TtlValue>();
 
@@ -25,10 +25,21 @@ namespace Jitbit.Utils
 
 			void _EvictExpired(object state)
 			{
-				foreach (var p in _dict)
+				//overlapped execution? forget it, lets move on
+				if (Monitor.TryEnter(this))
 				{
-					if (p.Value.IsExpired())
-						_dict.TryRemove(p.Key, out _);
+					try
+					{
+						foreach (var p in _dict)
+						{
+							if (p.Value.IsExpired())
+								_dict.TryRemove(p.Key, out _);
+						}
+					}
+					finally
+					{
+						Monitor.Exit(this);
+					}
 				}
 			}
 		}
@@ -137,7 +148,7 @@ namespace Jitbit.Utils
 			if (TryGet(key, out var value))
 				return value;
 
-			return _dict.GetOrAdd(key, k => new TtlValue(valueFactory(key), ttl)).Value;
+			return _dict.GetOrAdd(key, (k, v) => new TtlValue(valueFactory(k), v), ttl).Value;
 		}
 
 		/// <summary>
@@ -178,6 +189,20 @@ namespace Jitbit.Utils
 			{
 				var difference = Environment.TickCount64 - TickCountWhenToKill;
 				return difference > 0;
+			}
+		}
+
+		//IDispisable members
+		private bool _disposedValue;
+		public void Dispose() => Dispose(true);
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!_disposedValue)
+			{
+				if (disposing)
+					_cleanUpTimer.Dispose();
+
+				_disposedValue = true;
 			}
 		}
 	}
