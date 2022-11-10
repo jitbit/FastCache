@@ -187,8 +187,7 @@ namespace Jitbit.Utils
 
 			public bool IsExpired()
 			{
-				var difference = Environment.TickCount64 - TickCountWhenToKill;
-				return difference > 0;
+				return Environment.TickCount64 > TickCountWhenToKill;
 			}
 		}
 
