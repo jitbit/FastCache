@@ -26,7 +26,7 @@ namespace Jitbit.Utils
 			void _EvictExpired(object state)
 			{
 				//overlapped execution? forget it, lets move on
-				if (Monitor.TryEnter(this))
+				if (Monitor.TryEnter(_cleanUpTimer)) //use the timer-object for our lock, it's local, private and instance-type, so its ok
 				{
 					try
 					{
@@ -38,7 +38,7 @@ namespace Jitbit.Utils
 					}
 					finally
 					{
-						Monitor.Exit(this);
+						Monitor.Exit(_cleanUpTimer);
 					}
 				}
 			}
@@ -86,12 +86,12 @@ namespace Jitbit.Utils
 
 				/* EXPLANATION:
 				 * when an item was "found but is expired" - we need to treat as "not found" and discard it.
-				 * For that we either need to use a lock
+				 * One solution is to use a lock
 				 * so that the the three steps "exist? expired? remove!" are performed atomically.
 				 * Otherwise another tread might chip in, and ADD a non-expired item with the same key while we're evicting it.
 				 * And we'll be removing a non-expired key taht was just added
 				 * 
-				 * OR instead of using locks we can remove by key AND value. So if another thread has just rushed in 
+				 * BUT instead of using locks we can remove by key AND value. So if another thread has just rushed in 
 				 * and added another item with the same key - that other item won't be removed.
 				 * 
 				 * basically, instead of doing this
