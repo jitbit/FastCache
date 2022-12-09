@@ -33,7 +33,7 @@ namespace Jitbit.Utils
 						foreach (var p in _dict)
 						{
 							if (p.Value.IsExpired())
-								_dict.TryRemove(p.Key, out _);
+								_dict.TryRemove(p);
 						}
 					}
 					finally
