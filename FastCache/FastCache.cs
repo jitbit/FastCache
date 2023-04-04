@@ -50,6 +50,11 @@ namespace Jitbit.Utils
 		public int Count => _dict.Count;
 
 		/// <summary>
+		/// Removes all items from the cache
+		/// </summary>
+		public void Clear() => _dict.Clear();
+
+		/// <summary>
 		/// Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL.
 		/// </summary>
 		/// <param name="key">The key to add</param>

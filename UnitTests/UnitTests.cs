@@ -73,6 +73,17 @@ namespace UnitTests
 		}
 
 		[TestMethod]
+		public void TestClear()
+		{
+			var cache = new FastCache<string, int>();
+			cache.GetOrAdd("key", k => 1024, TimeSpan.FromSeconds(100));
+
+			cache.Clear();
+
+			Assert.IsTrue(!cache.TryGet("key", out int res));
+		}
+
+		[TestMethod]
 		public async Task TestTryAddAtomicness()
 		{
 			int i = 0;
