@@ -10,7 +10,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/jitbit/fastcache</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-	<Version>1.0.5</Version>
+	<Version>1.0.6</Version>
 	<PackageTags>cache;caching;MemoryCache</PackageTags>
 	<Description>Fastest in-memoery cache for .NET</Description>
 	<GenerateDocumentationFile>True</GenerateDocumentationFile>
