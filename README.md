@@ -13,7 +13,8 @@ Basically it's just a `ConcurrentDictionary` with expiration.
 
 |               Method |      Mean |     Error |   StdDev |   Gen0 | Allocated |
 |--------------------- |----------:|----------:|---------:|-------:|----------:|
-|    FastCacheLookup   | 67.15 ns  |  2.582 ns | 0.142 ns |      - |         - |
+|     DictionaryLookup |  65.38 ns |  1.594 ns | 0.087 ns |      - |         - |
+|    FastCacheLookup   |  67.15 ns |  2.582 ns | 0.142 ns |      - |         - |
 |    MemoryCacheLookup | 426.60 ns | 60.162 ns | 3.298 ns | 0.0200 |     128 B |
 |   FastCacheAddRemove |  99.97 ns | 12.040 ns | 0.660 ns | 0.0254 |     160 B |
 | MemoryCacheAddRemove | 710.70 ns | 32.415 ns | 1.777 ns | 0.0515 |     328 B |
