@@ -64,7 +64,7 @@ namespace Jitbit.Utils
 		{
 			var ttlValue = new TtlValue(value, ttl);
 
-			_dict.AddOrUpdate(key, ttlValue, (k, v) => ttlValue);
+			_dict.AddOrUpdate(key, (k, c) => c, (k, v, c) => c, ttlValue);
 		}
 
 		/// <summary>
@@ -153,7 +153,7 @@ namespace Jitbit.Utils
 			if (TryGet(key, out var value))
 				return value;
 
-			return _dict.GetOrAdd(key, (k, v) => new TtlValue(valueFactory(k), v), ttl).Value;
+			return _dict.GetOrAdd(key, (k, v) => new TtlValue(v.valueFactory(k), v.ttl), (ttl, valueFactory)).Value;
 		}
 
 		/// <summary>
