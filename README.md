@@ -16,7 +16,7 @@ Basically it's just a `ConcurrentDictionary` with expiration.
 |     DictionaryLookup |  65.38 ns |  1.594 ns | 0.087 ns |      - |         - |
 |    FastCacheLookup   |  67.15 ns |  2.582 ns | 0.142 ns |      - |         - |
 |    MemoryCacheLookup | 426.60 ns | 60.162 ns | 3.298 ns | 0.0200 |     128 B |
-|   FastCacheAddRemove |  99.97 ns | 12.040 ns | 0.660 ns | 0.0254 |     160 B |
+|   FastCacheAddRemove |  99.97 ns | 12.040 ns | 0.660 ns | 0.0254 |     80 B |
 | MemoryCacheAddRemove | 710.70 ns | 32.415 ns | 1.777 ns | 0.0515 |     328 B |
 
 ## Benchmarks under Linux (Ubuntu, Docker)
@@ -25,7 +25,7 @@ Basically it's just a `ConcurrentDictionary` with expiration.
 |--------------------- |------------:|-----------:|----------:|-------:|----------:|
 |      FastCacheLookup |    94.97 ns |   3.250 ns |  0.178 ns |      - |         - |
 |    MemoryCacheLookup | 1,051.69 ns |  64.904 ns |  3.558 ns | 0.0191 |     128 B |
-|   FastCacheAddRemove |   148.32 ns |  25.766 ns |  1.412 ns | 0.0253 |     160 B |
+|   FastCacheAddRemove |   148.32 ns |  25.766 ns |  1.412 ns | 0.0253 |     80 B |
 | MemoryCacheAddRemove | 1,120.75 ns | 767.666 ns | 42.078 ns | 0.0515 |     328 B |
 
 ## How is FastCache better
