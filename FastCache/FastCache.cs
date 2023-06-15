@@ -87,7 +87,7 @@ namespace Jitbit.Utils
 				//secret atomic removal method (only if both key and value match condition
 				//https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
 				//so that we don't need any locks!! woohoo
-				((ICollection<KeyValuePair<TKey, TtlValue>>)_dict).Remove(kv);
+				_dict.TryRemove(kv);
 
 				/* EXPLANATION:
 				 * when an item was "found but is expired" - we need to treat as "not found" and discard it.
