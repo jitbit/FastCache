@@ -56,10 +56,19 @@ public class BenchMark
 	[Benchmark]
 	public void FastCacheGetOrAdd()
 	{
-		_cache.GetOrAdd("test123", k => 123, TimeSpan.FromSeconds(1));
-		_cache.GetOrAdd("test234", k => 124, TimeSpan.FromSeconds(1));
-		_cache.GetOrAdd("test673", k => 125, TimeSpan.FromSeconds(1));
-		_cache.GetOrAdd("test987", k => 126, TimeSpan.FromSeconds(1));
+		_cache.GetOrAdd("test123", 123, TimeSpan.FromSeconds(1));
+		_cache.GetOrAdd("test234", 124, TimeSpan.FromSeconds(1));
+		_cache.GetOrAdd("test673", 125, TimeSpan.FromSeconds(1));
+		_cache.GetOrAdd("test987", 126, TimeSpan.FromSeconds(1));
+	}
+
+	[Benchmark]
+	public void MemoryCacheGetOrAdd()
+	{
+		MemoryCache.Default.AddOrGetExisting("test123", 123, DateTime.UtcNow.AddSeconds(1));
+		MemoryCache.Default.AddOrGetExisting("test234", 124, DateTime.UtcNow.AddSeconds(1));
+		MemoryCache.Default.AddOrGetExisting("test673", 125, DateTime.UtcNow.AddSeconds(1));
+		MemoryCache.Default.AddOrGetExisting("test987", 126, DateTime.UtcNow.AddSeconds(1));
 	}
 
 	[Benchmark]
@@ -75,5 +84,4 @@ public class BenchMark
 		MemoryCache.Default.Add("1111", 42, _dtPlus10Mins);
 		MemoryCache.Default.Remove("1111");
 	}
-
 }
