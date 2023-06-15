@@ -16,6 +16,8 @@ Basically it's just a `ConcurrentDictionary` with expiration.
 |     DictionaryLookup |  65.38 ns |  1.594 ns | 0.087 ns |      - |         - |
 |    FastCacheLookup   |  67.15 ns |  2.582 ns | 0.142 ns |      - |         - |
 |    MemoryCacheLookup | 426.60 ns | 60.162 ns | 3.298 ns | 0.0200 |     128 B |
+|    FastCacheGetOrAdd |  80.44 ns |  1.170 ns | 0.064 ns |      - |         - |
+|  MemoryCacheGetOrAdd | 826.85 ns | 36.609 ns | 2.007 ns | 0.1879 |    1184 B |
 |   FastCacheAddRemove |  99.97 ns | 12.040 ns | 0.660 ns | 0.0063 |      80 B |
 | MemoryCacheAddRemove | 710.70 ns | 32.415 ns | 1.777 ns | 0.0515 |     328 B |
 
