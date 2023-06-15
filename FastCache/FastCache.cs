@@ -157,6 +157,20 @@ namespace Jitbit.Utils
 		}
 
 		/// <summary>
+		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
+		/// </summary>
+		/// <param name="key">The key to add</param>
+		/// <param name="value">The value to add</param>
+		/// <param name="ttl">TTL of the item</param>
+		public TValue GetOrAdd(TKey key, TValue value, TimeSpan ttl)
+		{
+			if (TryGet(key, out var existingValue))
+				return existingValue;
+
+			return _dict.GetOrAdd(key, new TtlValue(value, ttl)).Value;
+		}
+
+		/// <summary>
 		/// Tries to remove item with the specified key
 		/// </summary>
 		/// <param name="key">The key of the element to remove</param>
