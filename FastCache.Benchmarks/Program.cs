@@ -26,6 +26,20 @@ public class BenchMark
 		}
 	}
 
+	/*
+	[Benchmark]
+	public void EvictExpired()
+	{
+		_cache.EvictExpired();
+	}
+
+	[Benchmark]
+	public void EvictExpired2()
+	{
+		_cache.EvictExpiredOptimized();
+	}
+	*/
+	
 	[Benchmark]
 	public void DictionaryLookup()
 	{

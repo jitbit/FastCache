@@ -21,25 +21,34 @@ namespace Jitbit.Utils
 		/// <param name="cleanupJobInterval">cleanup interval in milliseconds, default is 10000</param>
 		public FastCache(int cleanupJobInterval = 10000)
 		{
-			_cleanUpTimer = new Timer(_EvictExpired, null, cleanupJobInterval, cleanupJobInterval);
+			_cleanUpTimer = new Timer(s => EvictExpired(), null, cleanupJobInterval, cleanupJobInterval);
+		}
 
-			void _EvictExpired(object state)
+		/// <summary>
+		/// Cleans up expired items (dont' wait for the background job)
+		/// </summary>
+		public void EvictExpired()
+		{
+			//Eviction already started by another thread? forget it, lets move on
+			if (Monitor.TryEnter(_cleanUpTimer)) //use the timer-object for our lock, it's local, private and instance-type, so its ok
 			{
-				//overlapped execution? forget it, lets move on
-				if (Monitor.TryEnter(_cleanUpTimer)) //use the timer-object for our lock, it's local, private and instance-type, so its ok
+				try
 				{
-					try
+					//cache current tick count in a var to prevent calling it every iteration inside "IsExpired()" in a tight loop.
+					//On a 10000-items cache this allows us to slice 30 microseconds: 330 vs 360 microseconds which is 10% faster
+					//On a 50000-items cache it's even more: 2.057ms vs 2.817ms which is 35% faster!!
+					//the bigger the cache the bigger the win
+					var currTime = Environment.TickCount64;
+
+					foreach (var p in _dict)
 					{
-						foreach (var p in _dict)
-						{
-							if (p.Value.IsExpired())
-								_dict.TryRemove(p);
-						}
+						if (currTime > p.Value.TickCountWhenToKill) //instead of calling "p.Value.IsExpired" we're essentially doing the same thing manually
+							_dict.TryRemove(p);
 					}
-					finally
-					{
-						Monitor.Exit(_cleanUpTimer);
-					}
+				}
+				finally
+				{
+					Monitor.Exit(_cleanUpTimer);
 				}
 			}
 		}
