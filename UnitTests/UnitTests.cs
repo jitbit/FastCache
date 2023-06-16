@@ -108,18 +108,16 @@ namespace UnitTests
 
 			var cache = new FastCache<int, int>();
 			
-			cache.GetOrAdd(42, k => {
-				i++;
-				return 1024;
-			}, TimeSpan.FromMilliseconds(100));
+			cache.GetOrAdd(42, 42, TimeSpan.FromMilliseconds(100));
 
+			await Task.Delay(110); //wait for tha value to expire
 
 			await TestHelper.RunConcurrently(20, () => {
-				if (cache.TryAdd(42, 42, TimeSpan.FromSeconds(1)))
-					i++;
+				cache.GetOrAdd(42, k => { return ++i; }, TimeSpan.FromSeconds(1));
 			});
 
-			//test that add factory was called only once
+			//test that only the first value was added
+			cache.TryGet(42, out i);
 			Assert.IsTrue(i == 1, i.ToString());
 		}
 
