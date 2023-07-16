@@ -9,7 +9,9 @@
 
 Basically it's just a `ConcurrentDictionary` with expiration.
 
-## Benchmarks under Windows
+## Benchmarks
+
+Windows:
 
 |               Method |      Mean |     Error |   StdDev |   Gen0 | Allocated |
 |--------------------- |----------:|----------:|---------:|-------:|----------:|
@@ -21,7 +23,7 @@ Basically it's just a `ConcurrentDictionary` with expiration.
 |   FastCacheAddRemove |  99.97 ns | 12.040 ns | 0.660 ns | 0.0063 |      80 B |
 | MemoryCacheAddRemove | 710.70 ns | 32.415 ns | 1.777 ns | 0.0515 |     328 B |
 
-## Benchmarks under Linux (Ubuntu, Docker)
+Linux (Ubuntu, Docker):
 
 |               Method |        Mean |      Error |    StdDev |   Gen0 | Allocated |
 |--------------------- |------------:|-----------:|----------:|-------:|----------:|
@@ -36,7 +38,7 @@ Compared to `System.Runtime.Caching.MemoryCache` and `Microsoft.Extensions.Cachi
 
 * 7X faster reads (11X under Linux!)
 * 10x faster writes
-* Thread safe and [atomic](Atomic.md)
+* Thread safe and [atomic](https://www.jitbit.com/alexblog/fast-memory-cache/#perf)
 * Generic (strongly typed keys and values) to avoid boxing/unboxing primitive types
 * MemoryCache uses string keys only, so it allocates strings for keying
 * MemoryCache comes with performance counters that can't be turned off
