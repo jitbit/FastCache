@@ -188,6 +188,18 @@ namespace Jitbit.Utils
 			_dict.TryRemove(key, out _);
 		}
 
+		/// <summary>
+		/// Tries to remove item with the specified key, also returns the object removed in an "out" var
+		/// </summary>
+		/// <param name="key">The key of the element to remove</param>
+		/// <param name="value">Contains the object removed or the default value if not found</param>
+		public bool TryRemove(TKey key, out TValue value)
+		{
+			bool res = _dict.TryRemove(key, out var ttlValue);
+			value = res ? ttlValue.Value : default(TValue);
+			return res;
+		}
+
 		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
 		{
 			foreach (var kvp in _dict)

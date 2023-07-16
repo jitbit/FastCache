@@ -50,6 +50,16 @@ namespace UnitTests
 		}
 
 		[TestMethod]
+		public void TestTryRemove()
+		{
+			var cache = new FastCache<string, int>();
+			cache.AddOrUpdate("42", 42, TimeSpan.FromMilliseconds(100));
+			var res = cache.TryRemove("42", out int value);
+			Assert.IsTrue(res && value == 42);
+			Assert.IsFalse(cache.TryGet("42", out _));
+		}
+
+		[TestMethod]
 		public async Task TestTryAdd()
 		{
 			var cache = new FastCache<string, int>();
