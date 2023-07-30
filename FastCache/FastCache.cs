@@ -16,7 +16,7 @@ namespace Jitbit.Utils
 		private readonly Timer _cleanUpTimer;
 
 		/// <summary>
-		/// create cache
+		/// Initializes a new empty instance of <see cref="FastCache{TKey,TValue}"/>
 		/// </summary>
 		/// <param name="cleanupJobInterval">cleanup interval in milliseconds, default is 10000</param>
 		public FastCache(int cleanupJobInterval = 10000)
