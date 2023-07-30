@@ -211,7 +211,7 @@ namespace Jitbit.Utils
 		/// <param name="value">Contains the object removed or the default value if not found</param>
 		public bool TryRemove(TKey key, out TValue value)
 		{
-			bool res = _dict.TryRemove(key, out var ttlValue);
+			bool res = _dict.TryRemove(key, out var ttlValue) && !ttlValue.IsExpired();
 			value = res ? ttlValue.Value : default(TValue);
 			return res;
 		}

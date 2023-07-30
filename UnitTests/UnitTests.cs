@@ -57,6 +57,23 @@ namespace UnitTests
 			var res = cache.TryRemove("42", out int value);
 			Assert.IsTrue(res && value == 42);
 			Assert.IsFalse(cache.TryGet("42", out _));
+
+			//now try remove non-existing item
+			res = cache.TryRemove("blabblah", out value);
+			Assert.IsFalse(res);
+			Assert.IsTrue(value == 0);
+		}
+
+		[TestMethod]
+		public async Task TestTryRemoveWithTtl()
+		{
+			var cache = new FastCache<string, int>();
+			cache.AddOrUpdate("42", 42, TimeSpan.FromMilliseconds(100));
+			await Task.Delay(120); //let the item expire
+
+			var res = cache.TryRemove("42", out int value);
+			Assert.IsFalse(res);
+			Assert.IsTrue(value == 0);
 		}
 
 		[TestMethod]
