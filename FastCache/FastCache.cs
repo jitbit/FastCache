@@ -21,11 +21,27 @@ namespace Jitbit.Utils
 		/// <param name="cleanupJobInterval">cleanup interval in milliseconds, default is 10000</param>
 		public FastCache(int cleanupJobInterval = 10000)
 		{
-			_cleanUpTimer = new Timer(s => EvictExpired(), null, cleanupJobInterval, cleanupJobInterval);
+			_cleanUpTimer = new Timer(s => EvictExpiredJob(), null, cleanupJobInterval, cleanupJobInterval);
+		}
+
+		private static object _globalStaticLock = new object();
+		private void EvictExpiredJob()
+		{
+			//if an applicaiton has many-many instances of FastCache objects, make sure the timer-based
+			//cleanup jobs don't clash with each other, i.e. there are no clean-up jobs running in parallel
+			//so we don't waste CPU resources, because cleanup is a busy-loop that iterates a collection and does calculations
+			//so we use a lock to "throttle" the job and make it serial
+			//HOWEVER, we still allow the user to execute eviction explicitly
+
+			lock (_globalStaticLock)
+			{
+				EvictExpired();
+			}
 		}
 
 		/// <summary>
 		/// Cleans up expired items (dont' wait for the background job)
+		/// There's rarely a need to execute this method, b/c getting an item checks TTL anyway.
 		/// </summary>
 		public void EvictExpired()
 		{
