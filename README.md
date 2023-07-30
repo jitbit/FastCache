@@ -1,6 +1,6 @@
 # FastCache
 
-7x-10x faster alternative to MemoryCache. A high-performance, lighweight (8KB dll) and [thread-safe](Atomic.md) memory cache for .NET.
+7x-10x faster alternative to MemoryCache. A high-performance, lighweight (8KB dll) and [thread-safe](Atomic.md) memory cache for .NET Core (.NET 6 and later)
 
 [![NuGet version](https://badge.fury.io/nu/Jitbit.FastCache.svg)](https://badge.fury.io/nu/Jitbit.FastCache)
 [![.NET](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml/badge.svg)](https://github.com/jitbit/FastCache/actions/workflows/dotnet.yml)
