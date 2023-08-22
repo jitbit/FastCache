@@ -63,7 +63,7 @@ cache.AddOrUpdate(
 	value: 42,
 	ttl: TimeSpan.FromMinutes(1));
 
-cache.TeyGet("answer", out int value); //value is "42"
+cache.TryGet("answer", out int value); //value is "42"
 
 cache.GetOrAdd(
 	key: "answer",
