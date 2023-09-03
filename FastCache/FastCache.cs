@@ -263,7 +263,6 @@ namespace Jitbit.Utils
 				if (disposing)
 				{
 					_cleanUpTimer.Dispose();
-					_globalStaticLock.Dispose();
 				}
 
 				_disposedValue = true;
