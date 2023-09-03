@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Jitbit.Utils
 {
@@ -21,11 +22,11 @@ namespace Jitbit.Utils
 		/// <param name="cleanupJobInterval">cleanup interval in milliseconds, default is 10000</param>
 		public FastCache(int cleanupJobInterval = 10000)
 		{
-			_cleanUpTimer = new Timer(s => EvictExpiredJob(), null, cleanupJobInterval, cleanupJobInterval);
+			_cleanUpTimer = new Timer(s => { _ = EvictExpiredJob(); }, null, cleanupJobInterval, cleanupJobInterval);
 		}
 
-		private static object _globalStaticLock = new object();
-		private void EvictExpiredJob()
+		private static SemaphoreSlim _globalStaticLock = new(1);
+		private async Task EvictExpiredJob()
 		{
 			//if an applicaiton has many-many instances of FastCache objects, make sure the timer-based
 			//cleanup jobs don't clash with each other, i.e. there are no clean-up jobs running in parallel
@@ -33,10 +34,15 @@ namespace Jitbit.Utils
 			//so we use a lock to "throttle" the job and make it serial
 			//HOWEVER, we still allow the user to execute eviction explicitly
 
-			lock (_globalStaticLock)
+			//use Semaphore instead of a "lock" to free up thread, otherwise - possible thread starvation
+
+			await _globalStaticLock.WaitAsync()
+				.ConfigureAwait(false);
+			try
 			{
 				EvictExpired();
 			}
+			finally { _globalStaticLock.Release(); }
 		}
 
 		/// <summary>
@@ -255,7 +261,10 @@ namespace Jitbit.Utils
 			if (!_disposedValue)
 			{
 				if (disposing)
+				{
 					_cleanUpTimer.Dispose();
+					_globalStaticLock.Dispose();
+				}
 
 				_disposedValue = true;
 			}
