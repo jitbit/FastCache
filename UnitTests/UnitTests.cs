@@ -19,6 +19,30 @@ namespace UnitTests
 		}
 
 		[TestMethod]
+		public async Task TestEviction()
+		{
+			var list = new List<FastCache<int, int>>();
+			for (int i = 0; i < 20; i++)
+			{
+				var cache = new FastCache<int, int>(cleanupJobInterval: 200);
+				cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(100));
+				list.Add(cache);
+			}
+			await Task.Delay(300);
+
+			for (int i = 0; i < 20; i++)
+			{
+				Assert.IsTrue(list[i].Count == 0); //cleanup job has run?
+			}
+
+			//cleanup
+			for (int i = 0; i < 20; i++)
+			{
+				list[i].Dispose();
+			}
+		}
+
+		[TestMethod]
 		public async Task Shortdelay()
 		{
 			var cache = new FastCache<int, int>();
