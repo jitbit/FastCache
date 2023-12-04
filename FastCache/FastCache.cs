@@ -123,9 +123,9 @@ namespace Jitbit.Utils
 				/* EXPLANATION:
 				 * when an item was "found but is expired" - we need to treat as "not found" and discard it.
 				 * One solution is to use a lock
-				 * so that the the three steps "exist? expired? remove!" are performed atomically.
+				 * so that the three steps "exist? expired? remove!" are performed atomically.
 				 * Otherwise another tread might chip in, and ADD a non-expired item with the same key while we're evicting it.
-				 * And we'll be removing a non-expired key taht was just added
+				 * And we'll be removing a non-expired key that was just added.
 				 * 
 				 * BUT instead of using locks we can remove by key AND value. So if another thread has just rushed in 
 				 * and added another item with the same key - that other item won't be removed.
