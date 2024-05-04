@@ -184,7 +184,30 @@ namespace Jitbit.Utils
 			if (TryGet(key, out var value))
 				return value;
 
-			return _dict.GetOrAdd(key, (k, v) => new TtlValue(v.valueFactory(k), v.ttl), (ttl, valueFactory)).Value;
+			return _dict.GetOrAdd(
+				key,
+				(k, arg) => new TtlValue(arg.valueFactory(k), arg.ttl),
+				(ttl, valueFactory)
+			).Value;
+		}
+
+		/// <summary>
+		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
+		/// </summary>
+		/// <param name="key">The key to add</param>
+		/// <param name="valueFactory">The factory function used to generate the item for the key</param>
+		/// <param name="ttl">TTL of the item</param>
+		/// <param name="factoryArgument">Argument value to pass into valueFactory</param>
+		public TValue GetOrAdd<TArg>(TKey key, Func<TKey, TArg, TValue> valueFactory, TimeSpan ttl, TArg factoryArgument)
+		{
+			if (TryGet(key, out var value))
+				return value;
+
+			return _dict.GetOrAdd(
+				key,
+				(k, arg) => new TtlValue(arg.valueFactory(k, arg.factoryArgument), arg.ttl),
+				(ttl, valueFactory, factoryArgument)
+			).Value;
 		}
 
 		/// <summary>

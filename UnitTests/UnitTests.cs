@@ -124,6 +124,18 @@ namespace UnitTests
 		}
 
 		[TestMethod]
+		public async Task TestGetOrAddWithArg()
+		{
+			var cache = new FastCache<string, int>();
+			cache.GetOrAdd("key", (k, arg) => 1024 + arg.Length, TimeSpan.FromMilliseconds(100), "test123");
+			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1031);
+
+			//eviction
+			await Task.Delay(110);
+			Assert.IsFalse(cache.TryGet("key", out _));
+		}
+
+		[TestMethod]
 		public void TestClear()
 		{
 			var cache = new FastCache<string, int>();
