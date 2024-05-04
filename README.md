@@ -70,6 +70,13 @@ cache.GetOrAdd(
 	valueFactory: k => 42,
 	ttl: TimeSpan.FromMilliseconds(100));
 
+//handy overload to prevent captures/closures allocation
+cache.GetOrAdd(
+	key: "answer",
+	valueFactory: (k, arg) => 42 + arg.Length,
+	ttl: TimeSpan.FromMilliseconds(100),
+	factoryArgument: "some state data");
+
 ```
 
 ## Tradeoffs
