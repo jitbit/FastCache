@@ -9,7 +9,7 @@ namespace UnitTests
 		[TestMethod]
 		public async Task TestGetSetCleanup()
 		{
-			var _cache = new FastCache<int, int>(cleanupJobInterval: 200);
+			using var _cache = new FastCache<int, int>(cleanupJobInterval: 200); //add "using" to stop cleanup timer, to prevent cleanup job from clashing with other tests
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(100));
 			Assert.IsTrue(_cache.TryGet(42, out int v));
 			Assert.IsTrue(v == 42);
@@ -117,10 +117,33 @@ namespace UnitTests
 		{
 			var cache = new FastCache<string, int>();
 			cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
-			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1024);
+			Assert.AreEqual(cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100)), 1024); //old value
+			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1024); //another way to retrieve
 			await Task.Delay(110);
 
-			Assert.IsFalse(cache.TryGet("key", out _));
+			Assert.IsFalse(cache.TryGet("key", out _)); //expired
+
+			//now try non-factory overloads
+			Assert.IsTrue(cache.GetOrAdd("key123", 123321, TimeSpan.FromMilliseconds(100)) == 123321);
+			Assert.IsTrue(cache.GetOrAdd("key123", -1, TimeSpan.FromMilliseconds(100)) == 123321); //still old value
+			await Task.Delay(110);
+			Assert.IsTrue(cache.GetOrAdd("key123", -1, TimeSpan.FromMilliseconds(100)) == -1); //new value
+		}
+
+
+		[TestMethod]
+		public async Task TestGetOrAddExpiration()
+		{
+			var cache = new FastCache<string, int>();
+			cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
+
+			Assert.AreEqual(cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100)), 1024); //old value
+			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1024); //another way to retrieve
+			
+			await Task.Delay(110); //let the item expire
+
+			Assert.AreEqual(cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100)), 1025); //new value
+			Assert.IsTrue(cache.TryGet("key", out res) && res == 1025); //another way to retrieve
 		}
 
 		[TestMethod]
@@ -133,6 +156,12 @@ namespace UnitTests
 			//eviction
 			await Task.Delay(110);
 			Assert.IsFalse(cache.TryGet("key", out _));
+
+			//now try without "TryGet"
+			Assert.IsTrue(cache.GetOrAdd("key2", (k, arg) => 21 + arg.Length, TimeSpan.FromMilliseconds(100), "123") == 24);
+			Assert.IsTrue(cache.GetOrAdd("key2", (k, arg) => 2211 + arg.Length, TimeSpan.FromMilliseconds(100), "123") == 24);
+			await Task.Delay(110);
+			Assert.IsTrue(cache.GetOrAdd("key2", (k, arg) => 2211 + arg.Length, TimeSpan.FromMilliseconds(100), "123") == 2214);
 		}
 
 		[TestMethod]
@@ -164,6 +193,7 @@ namespace UnitTests
 			Assert.IsTrue(i == 1, i.ToString());
 		}
 
+		//this text can occasionally fail becasue factory is not guaranteed to be called only once. only panic if it fails ALL THE TIME
 		[TestMethod]
 		public async Task TestGetOrAddAtomicNess()
 		{

@@ -64,7 +64,7 @@ namespace Jitbit.Utils
 
 					foreach (var p in _dict)
 					{
-						if (currTime > p.Value.TickCountWhenToKill) //instead of calling "p.Value.IsExpired" we're essentially doing the same thing manually
+						if (p.Value.IsExpired(currTime)) //call IsExpired with "currTime" to avoid calling Environment.TickCount64 multiple times
 							_dict.TryRemove(p);
 					}
 				}
@@ -181,14 +181,23 @@ namespace Jitbit.Utils
 		/// <param name="ttl">TTL of the item</param>
 		public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)
 		{
-			if (TryGet(key, out var value))
-				return value;
-
-			return _dict.GetOrAdd(
+			bool wasAdded = false; //flag to indicate "add vs get". TODO: wrap in ref type some day to avoid captures/closures
+			var ttlValue = _dict.GetOrAdd(
 				key,
-				(k, arg) => new TtlValue(arg.valueFactory(k), arg.ttl),
-				(ttl, valueFactory)
-			).Value;
+				(k) =>
+				{
+					wasAdded = true;
+					return new TtlValue(valueFactory(k), ttl);
+				});
+
+			//if the item is expired, update value and TTL
+			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
+			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
+			{
+				ttlValue.ModifyIfExpired(() => valueFactory(key), ttl);
+			}
+
+			return ttlValue.Value;
 		}
 
 		/// <summary>
@@ -200,14 +209,23 @@ namespace Jitbit.Utils
 		/// <param name="factoryArgument">Argument value to pass into valueFactory</param>
 		public TValue GetOrAdd<TArg>(TKey key, Func<TKey, TArg, TValue> valueFactory, TimeSpan ttl, TArg factoryArgument)
 		{
-			if (TryGet(key, out var value))
-				return value;
-
-			return _dict.GetOrAdd(
+			bool wasAdded = false; //flag to indicate "add vs get"
+			var ttlValue = _dict.GetOrAdd(
 				key,
-				(k, arg) => new TtlValue(arg.valueFactory(k, arg.factoryArgument), arg.ttl),
-				(ttl, valueFactory, factoryArgument)
-			).Value;
+				(k) =>
+				{
+					wasAdded = true;
+					return new TtlValue(valueFactory(k, factoryArgument), ttl);
+				});
+
+			//if the item is expired, update value and TTL
+			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
+			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
+			{
+				ttlValue.ModifyIfExpired(() => valueFactory(key, factoryArgument), ttl);
+			}
+
+			return ttlValue.Value;
 		}
 
 		/// <summary>
@@ -218,10 +236,22 @@ namespace Jitbit.Utils
 		/// <param name="ttl">TTL of the item</param>
 		public TValue GetOrAdd(TKey key, TValue value, TimeSpan ttl)
 		{
-			if (TryGet(key, out var existingValue))
-				return existingValue;
+			bool wasAdded = false; //flag to indicate "add vs get"
+			var ttlValue = _dict.GetOrAdd(key,
+				(k) =>
+				{
+					wasAdded = true;
+					return new TtlValue(value, ttl);
+				});
 
-			return _dict.GetOrAdd(key, new TtlValue(value, ttl)).Value;
+			//if the item is expired, update value and TTL
+			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
+			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
+			{
+				ttlValue.ModifyIfExpired(() => value, ttl);
+			}
+
+			return ttlValue.Value;
 		}
 
 		/// <summary>
@@ -245,11 +275,13 @@ namespace Jitbit.Utils
 			return res;
 		}
 
+		/// <inheritdoc/>
 		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
 		{
+			var currTime = Environment.TickCount64; //save to a var to prevent multiple calls to Environment.TickCount64
 			foreach (var kvp in _dict)
 			{
-				if (!kvp.Value.IsExpired())
+				if (!kvp.Value.IsExpired(currTime))
 					yield return new KeyValuePair<TKey, TValue>(kvp.Key, kvp.Value.Value);
 			}
 		}
@@ -261,8 +293,8 @@ namespace Jitbit.Utils
 
 		private class TtlValue
 		{
-			public readonly TValue Value;
-			public readonly long TickCountWhenToKill;
+			public TValue Value { get; private set; }
+			private long TickCountWhenToKill;
 
 			public TtlValue(TValue value, TimeSpan ttl)
 			{
@@ -270,9 +302,22 @@ namespace Jitbit.Utils
 				TickCountWhenToKill = Environment.TickCount64 + (long)ttl.TotalMilliseconds;
 			}
 
-			public bool IsExpired()
+			public bool IsExpired() => IsExpired(Environment.TickCount64);
+
+			//use an overload instead of optional param to avoid extra IF's
+			public bool IsExpired(long currTime) => currTime > TickCountWhenToKill;
+
+			/// <summary>
+			/// Updates the value and TTL only if the item is expired
+			/// </summary>
+			public void ModifyIfExpired(Func<TValue> newValueFactory, TimeSpan newTtl)
 			{
-				return Environment.TickCount64 > TickCountWhenToKill;
+				var ticks = Environment.TickCount64; //save to a var to prevent multiple calls to Environment.TickCount64
+				if (IsExpired(ticks)) //if expired - update the value and TTL
+				{
+					TickCountWhenToKill = ticks + (long)newTtl.TotalMilliseconds; //update the expiration time first for better concurrency
+					Value = newValueFactory();
+				}
 			}
 		}
 
