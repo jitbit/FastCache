@@ -323,7 +323,9 @@ namespace Jitbit.Utils
 
 		//IDispisable members
 		private bool _disposedValue;
+		/// <inheritdoc/>
 		public void Dispose() => Dispose(true);
+		/// <inheritdoc/>
 		protected virtual void Dispose(bool disposing)
 		{
 			if (!_disposedValue)
