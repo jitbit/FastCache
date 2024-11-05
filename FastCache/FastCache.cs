@@ -15,13 +15,22 @@ namespace Jitbit.Utils
 		private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new ConcurrentDictionary<TKey, TtlValue>();
 
 		private readonly Timer _cleanUpTimer;
+		private readonly EvictionCallback _itemEvicted;
+
+		/// <summary>
+		/// Callback (RUNS ON THREAD POOL!) when an item is evicted from the cache.
+		/// </summary>
+		/// <param name="key"></param>
+		public delegate void EvictionCallback(TKey key);
 
 		/// <summary>
 		/// Initializes a new empty instance of <see cref="FastCache{TKey,TValue}"/>
 		/// </summary>
 		/// <param name="cleanupJobInterval">cleanup interval in milliseconds, default is 10000</param>
-		public FastCache(int cleanupJobInterval = 10000)
+		/// <param name="itemEvicted">Optional callback (RUNS ON THREAD POOL!) when an item is evicted from the cache</param>
+		public FastCache(int cleanupJobInterval = 10000, EvictionCallback itemEvicted = null)
 		{
+			_itemEvicted = itemEvicted;
 			_cleanUpTimer = new Timer(s => { _ = EvictExpiredJob(); }, null, cleanupJobInterval, cleanupJobInterval);
 		}
 
@@ -65,7 +74,10 @@ namespace Jitbit.Utils
 					foreach (var p in _dict)
 					{
 						if (p.Value.IsExpired(currTime)) //call IsExpired with "currTime" to avoid calling Environment.TickCount64 multiple times
+						{
 							_dict.TryRemove(p);
+							OnEviction(p.Key);
+						}
 					}
 				}
 				finally
@@ -151,6 +163,8 @@ namespace Jitbit.Utils
 				 * 
 				 * */
 
+				OnEviction(key);
+
 				return false;
 			}
 
@@ -188,7 +202,8 @@ namespace Jitbit.Utils
 			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
 			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
 			{
-				ttlValue.ModifyIfExpired(valueFactory, ttl);
+				if (ttlValue.ModifyIfExpired(valueFactory, ttl))
+					OnEviction(key);
 			}
 
 			return ttlValue.Value;
@@ -259,6 +274,22 @@ namespace Jitbit.Utils
 			return this.GetEnumerator();
 		}
 
+		private void OnEviction(TKey key)
+		{
+			if (_itemEvicted == null) return;
+
+			Task.Run(() => //run on thread pool to avoid blocking
+			{
+				try
+				{
+					_itemEvicted(key);
+				}
+				catch {
+					var i = 0;
+				} //to prevent any exceptions from crashing the thread
+			});
+		}
+
 		private class TtlValue
 		{
 			public TValue Value { get; private set; }
@@ -278,14 +309,17 @@ namespace Jitbit.Utils
 			/// <summary>
 			/// Updates the value and TTL only if the item is expired
 			/// </summary>
-			public void ModifyIfExpired(Func<TValue> newValueFactory, TimeSpan newTtl)
+			/// <returns>True if the item expired and was updated, otherwise false</returns>
+			public bool ModifyIfExpired(Func<TValue> newValueFactory, TimeSpan newTtl)
 			{
 				var ticks = Environment.TickCount64; //save to a var to prevent multiple calls to Environment.TickCount64
 				if (IsExpired(ticks)) //if expired - update the value and TTL
 				{
 					TickCountWhenToKill = ticks + (long)newTtl.TotalMilliseconds; //update the expiration time first for better concurrency
 					Value = newValueFactory();
+					return true;
 				}
+				return false;
 			}
 		}
 
