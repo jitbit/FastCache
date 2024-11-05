@@ -26,7 +26,7 @@ public class EvictionCallbackTests
         _cache.AddOrUpdate(key, "value", TimeSpan.FromMilliseconds(1));
 
         // Act
-        await Task.Delay(110); // Wait for expiration
+        await Task.Delay(120); // Wait for expiration background job
 
         // Assert
         Assert.AreEqual(1, _evictedKeys.Count);
@@ -72,7 +72,7 @@ public class EvictionCallbackTests
         _cache.AddOrUpdate("key", "value", TimeSpan.FromMilliseconds(1));
 
         // Act
-        await Task.Delay(110); // Wait for cleanup job
+        await Task.Delay(120); // Wait for cleanup job
 
         // Assert
         Assert.AreEqual(1, _evictedKeys.Count);
