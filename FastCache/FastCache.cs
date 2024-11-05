@@ -173,13 +173,7 @@ namespace Jitbit.Utils
 			return _dict.TryAdd(key, new TtlValue(value, ttl));
 		}
 
-		/// <summary>
-		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
-		/// </summary>
-		/// <param name="key">The key to add</param>
-		/// <param name="valueFactory">The factory function used to generate the item for the key</param>
-		/// <param name="ttl">TTL of the item</param>
-		public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)
+		private TValue GetOrAddCore(TKey key, Func<TValue> valueFactory, TimeSpan ttl)
 		{
 			bool wasAdded = false; //flag to indicate "add vs get". TODO: wrap in ref type some day to avoid captures/closures
 			var ttlValue = _dict.GetOrAdd(
@@ -187,18 +181,27 @@ namespace Jitbit.Utils
 				(k) =>
 				{
 					wasAdded = true;
-					return new TtlValue(valueFactory(k), ttl);
+					return new TtlValue(valueFactory(), ttl);
 				});
 
 			//if the item is expired, update value and TTL
 			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
 			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
 			{
-				ttlValue.ModifyIfExpired(() => valueFactory(key), ttl);
+				ttlValue.ModifyIfExpired(valueFactory, ttl);
 			}
 
 			return ttlValue.Value;
 		}
+
+		/// <summary>
+		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
+		/// </summary>
+		/// <param name="key">The key to add</param>
+		/// <param name="valueFactory">The factory function used to generate the item for the key</param>
+		/// <param name="ttl">TTL of the item</param>
+		public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)
+			=> GetOrAddCore(key, () => valueFactory(key), ttl);
 
 		/// <summary>
 		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
@@ -208,25 +211,7 @@ namespace Jitbit.Utils
 		/// <param name="ttl">TTL of the item</param>
 		/// <param name="factoryArgument">Argument value to pass into valueFactory</param>
 		public TValue GetOrAdd<TArg>(TKey key, Func<TKey, TArg, TValue> valueFactory, TimeSpan ttl, TArg factoryArgument)
-		{
-			bool wasAdded = false; //flag to indicate "add vs get"
-			var ttlValue = _dict.GetOrAdd(
-				key,
-				(k) =>
-				{
-					wasAdded = true;
-					return new TtlValue(valueFactory(k, factoryArgument), ttl);
-				});
-
-			//if the item is expired, update value and TTL
-			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
-			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
-			{
-				ttlValue.ModifyIfExpired(() => valueFactory(key, factoryArgument), ttl);
-			}
-
-			return ttlValue.Value;
-		}
+			=> GetOrAddCore(key, () => valueFactory(key, factoryArgument), ttl);
 
 		/// <summary>
 		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
@@ -235,24 +220,7 @@ namespace Jitbit.Utils
 		/// <param name="value">The value to add</param>
 		/// <param name="ttl">TTL of the item</param>
 		public TValue GetOrAdd(TKey key, TValue value, TimeSpan ttl)
-		{
-			bool wasAdded = false; //flag to indicate "add vs get"
-			var ttlValue = _dict.GetOrAdd(key,
-				(k) =>
-				{
-					wasAdded = true;
-					return new TtlValue(value, ttl);
-				});
-
-			//if the item is expired, update value and TTL
-			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
-			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
-			{
-				ttlValue.ModifyIfExpired(() => value, ttl);
-			}
-
-			return ttlValue.Value;
-		}
+			=> GetOrAddCore(key, () => value, ttl);
 
 		/// <summary>
 		/// Tries to remove item with the specified key
