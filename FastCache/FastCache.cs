@@ -284,9 +284,7 @@ namespace Jitbit.Utils
 				{
 					_itemEvicted(key);
 				}
-				catch {
-					var i = 0;
-				} //to prevent any exceptions from crashing the thread
+				catch { } //to prevent any exceptions from crashing the thread
 			});
 		}
 
