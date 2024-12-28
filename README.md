@@ -65,6 +65,7 @@ cache.AddOrUpdate(
 
 cache.TryGet("answer", out int value); //value is "42"
 
+//factory pattern! calls the expensive factory only if not cached yet
 cache.GetOrAdd(
 	key: "answer",
 	valueFactory: k => 42,
