@@ -63,6 +63,7 @@ namespace Jitbit.Utils
 			//Eviction already started by another thread? forget it, lets move on
 			if (Monitor.TryEnter(_cleanUpTimer)) //use the timer-object for our lock, it's local, private and instance-type, so its ok
 			{
+				List<TKey> evictedKeys = null; // Batch eviction callbacks
 				try
 				{
 					//cache current tick count in a var to prevent calling it every iteration inside "IsExpired()" in a tight loop.
@@ -75,8 +76,11 @@ namespace Jitbit.Utils
 					{
 						if (p.Value.IsExpired(currTime)) //call IsExpired with "currTime" to avoid calling Environment.TickCount64 multiple times
 						{
-							_dict.TryRemove(p);
-							OnEviction(p.Key);
+							if (_dict.TryRemove(p) && _itemEvicted != null) // collect key for later batch processing (only if callback exists)
+							{
+								evictedKeys ??= new List<TKey>(); //lazy initialize the list
+								evictedKeys.Add(p.Key);
+							}
 						}
 					}
 				}
@@ -84,6 +88,9 @@ namespace Jitbit.Utils
 				{
 					Monitor.Exit(_cleanUpTimer);
 				}
+
+				// Trigger batched eviction callbacks outside the loop to prevent flooding the thread pool
+				OnEviction(evictedKeys);
 			}
 		}
 
@@ -163,7 +170,7 @@ namespace Jitbit.Utils
 				 * 
 				 * */
 
-				OnEviction(key);
+				Task.Run(() => OnEviction(key));
 
 				return false;
 			}
@@ -203,7 +210,7 @@ namespace Jitbit.Utils
 			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
 			{
 				if (ttlValue.ModifyIfExpired(valueFactory, ttl))
-					OnEviction(key);
+					Task.Run(() => OnEviction(key));
 			}
 
 			return ttlValue.Value;
@@ -283,6 +290,25 @@ namespace Jitbit.Utils
 				try
 				{
 					_itemEvicted(key);
+				}
+				catch { } //to prevent any exceptions from crashing the thread
+			});
+		}
+
+		// same as OnEviction(TKey) but for batching
+		private void OnEviction(List<TKey> keys)
+		{
+			if (keys == null || keys.Count == 0) return;
+			if (_itemEvicted == null) return;
+
+			Task.Run(() => //run on thread pool to avoid blocking
+			{
+				try
+				{
+					foreach (var key in keys)
+					{
+						_itemEvicted(key);
+					}
 				}
 				catch { } //to prevent any exceptions from crashing the thread
 			});
