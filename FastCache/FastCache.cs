@@ -14,6 +14,7 @@ namespace Jitbit.Utils
 	{
 		private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new ConcurrentDictionary<TKey, TtlValue>();
 
+		private readonly Lock _lock = new();
 		private readonly Timer _cleanUpTimer;
 		private readonly EvictionCallback _itemEvicted;
 
@@ -61,7 +62,7 @@ namespace Jitbit.Utils
 		public void EvictExpired()
 		{
 			//Eviction already started by another thread? forget it, lets move on
-			if (Monitor.TryEnter(_cleanUpTimer)) //use the timer-object for our lock, it's local, private and instance-type, so its ok
+			if (_lock.TryEnter()) //use the timer-object for our lock, it's local, private and instance-type, so its ok
 			{
 				List<TKey> evictedKeys = null; // Batch eviction callbacks
 				try
@@ -86,7 +87,7 @@ namespace Jitbit.Utils
 				}
 				finally
 				{
-					Monitor.Exit(_cleanUpTimer);
+                    _lock.Exit();
 				}
 
 				// Trigger batched eviction callbacks outside the loop to prevent flooding the thread pool
