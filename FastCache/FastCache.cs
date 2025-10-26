@@ -170,7 +170,7 @@ namespace Jitbit.Utils
 				 * 
 				 * */
 
-				Task.Run(() => OnEviction(key));
+				OnEviction(key);
 
 				return false;
 			}
@@ -210,7 +210,7 @@ namespace Jitbit.Utils
 			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
 			{
 				if (ttlValue.ModifyIfExpired(valueFactory, ttl))
-					Task.Run(() => OnEviction(key));
+					OnEviction(key);
 			}
 
 			return ttlValue.Value;
