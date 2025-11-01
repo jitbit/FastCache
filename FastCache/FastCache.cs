@@ -118,7 +118,7 @@ namespace Jitbit.Utils
 		{
 			var ttlValue = new TtlValue(value, ttl);
 
-			_dict.AddOrUpdate(key, (k, c) => c, (k, v, c) => c, ttlValue);
+			_dict.AddOrUpdate(key, static (_, c) => c, static (_, _, c) => c, ttlValue);
 		}
 
 		/// <summary>
@@ -203,7 +203,7 @@ namespace Jitbit.Utils
 			bool wasAdded = false; //flag to indicate "add vs get". TODO: wrap in ref type some day to avoid captures/closures
 			var ttlValue = _dict.GetOrAdd(
 				key,
-				(k) =>
+				(_) =>
 				{
 					wasAdded = true;
 					return new TtlValue(valueFactory(), ttl);
