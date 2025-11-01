@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace Jitbit.Utils
 {
+	internal static class FastCacheStatics
+	{
+		internal static readonly SemaphoreSlim GlobalStaticLock = new(1); //moved this static field to separate class, otherwise a static field in a generic class is not a true singleton
+	}
+
 	/// <summary>
 	/// faster MemoryCache alternative. basically a concurrent dictionary with expiration
 	/// </summary>
@@ -34,7 +39,6 @@ namespace Jitbit.Utils
 			_cleanUpTimer = new Timer(s => { _ = EvictExpiredJob(); }, null, cleanupJobInterval, cleanupJobInterval);
 		}
 
-		private static SemaphoreSlim _globalStaticLock = new(1);
 		private async Task EvictExpiredJob()
 		{
 			//if an applicaiton has many-many instances of FastCache objects, make sure the timer-based
@@ -45,13 +49,13 @@ namespace Jitbit.Utils
 
 			//use Semaphore instead of a "lock" to free up thread, otherwise - possible thread starvation
 
-			await _globalStaticLock.WaitAsync()
+			await FastCacheStatics.GlobalStaticLock.WaitAsync()
 				.ConfigureAwait(false);
 			try
 			{
 				EvictExpired();
 			}
-			finally { _globalStaticLock.Release(); }
+			finally { FastCacheStatics.GlobalStaticLock.Release(); }
 		}
 
 		/// <summary>
