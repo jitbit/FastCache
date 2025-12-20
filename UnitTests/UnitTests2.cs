@@ -225,5 +225,29 @@ namespace UnitTests
             Assert.IsTrue(cache.TryGet("key2", out int value));
             Assert.AreEqual(43, value);
         }
+
+        [TestMethod]
+        public void AddOrUpdate_WithFactory()
+        {
+            // Arrange
+            var cache = new FastCache<string, int>();
+            int callCount = 0;
+
+            // Act
+            cache.AddOrUpdate("key1", () => { callCount++; return 42; }, TimeSpan.FromMinutes(1));
+            bool exists = cache.TryGet("key1", out int value);
+
+            // Assert
+            Assert.IsTrue(exists);
+            Assert.AreEqual(42, value);
+            Assert.AreEqual(1, callCount); // Factory should be called exactly once
+
+            callCount = 0;
+            cache.AddOrUpdate("key1", () => { callCount++; return 43; }, TimeSpan.FromMinutes(1));
+            exists = cache.TryGet("key1", out value);
+            Assert.IsTrue(exists);
+            Assert.AreEqual(43, value);
+            Assert.AreEqual(1, callCount); // Factory should be called exactly once
+        }
     }
 }

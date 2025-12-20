@@ -109,7 +109,7 @@ namespace Jitbit.Utils
 		public void Clear() => _dict.Clear();
 
 		/// <summary>
-		/// Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL.
+		/// Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL, essentially "sliding expiration".
 		/// </summary>
 		/// <param name="key">The key to add</param>
 		/// <param name="value">The value to add</param>
@@ -119,6 +119,19 @@ namespace Jitbit.Utils
 			var ttlValue = new TtlValue(value, ttl);
 
 			_dict.AddOrUpdate(key, static (_, c) => c, static (_, _, c) => c, ttlValue);
+		}
+
+		/// <summary>
+		/// Factory pattern overload. Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL, essentially "sliding expiration".
+		/// </summary>
+		/// <param name="key">The key to add or update</param>
+		/// <param name="valueFactory">The factory function used to generate the item for the key</param>
+		/// <param name="ttl">TTL of the item</param>
+		public void AddOrUpdate(TKey key, Func<TValue> valueFactory, TimeSpan ttl)
+		{
+			_dict.AddOrUpdate(key,
+				addValueFactory: _ => new TtlValue(valueFactory(), ttl),
+				updateValueFactory: (_, _) => new TtlValue(valueFactory(), ttl));
 		}
 
 		/// <summary>
