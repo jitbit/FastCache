@@ -203,7 +203,7 @@ namespace UnitTests
             var items = cache.ToList();
 
             // Assert
-            Assert.AreEqual(1, items.Count);
+            Assert.HasCount(1, items);
             Assert.AreEqual(42, items[0].Value);
             Assert.AreEqual("key1", items[0].Key);
         }

@@ -12,10 +12,10 @@ namespace UnitTests
 			using var _cache = new FastCache<int, int>(cleanupJobInterval: 200); //add "using" to stop cleanup timer, to prevent cleanup job from clashing with other tests
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(100));
 			Assert.IsTrue(_cache.TryGet(42, out int v));
-			Assert.IsTrue(v == 42);
+			Assert.AreEqual(42, v);
 
 			await Task.Delay(300);
-			Assert.IsTrue(_cache.Count == 0); //cleanup job has run?
+			Assert.AreEqual(0, _cache.Count); //cleanup job has run?
 		}
 
 		[TestMethod]
@@ -32,7 +32,7 @@ namespace UnitTests
 
 			for (int i = 0; i < 20; i++)
 			{
-				Assert.IsTrue(list[i].Count == 0); //cleanup job has run?
+				Assert.AreEqual(0, list[i].Count); //cleanup job has run?
 			}
 
 			//cleanup
@@ -51,7 +51,7 @@ namespace UnitTests
 			await Task.Delay(50);
 
 			Assert.IsTrue(cache.TryGet(42, out int result)); //not evicted
-			Assert.IsTrue(result == 42);
+			Assert.AreEqual(42, result);
 		}
 
 		[TestMethod]
@@ -85,7 +85,7 @@ namespace UnitTests
 			//now try remove non-existing item
 			res = cache.TryRemove("blabblah", out value);
 			Assert.IsFalse(res);
-			Assert.IsTrue(value == 0);
+			Assert.AreEqual(0, value);
 		}
 
 		[TestMethod]
@@ -97,7 +97,7 @@ namespace UnitTests
 
 			var res = cache.TryRemove("42", out int value);
 			Assert.IsFalse(res);
-			Assert.IsTrue(value == 0);
+			Assert.AreEqual(0, value);
 		}
 
 		[TestMethod]
@@ -117,17 +117,17 @@ namespace UnitTests
 		{
 			var cache = new FastCache<string, int>();
 			cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
-			Assert.AreEqual(cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100)), 1024); //old value
+			Assert.AreEqual(1024, cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100))); //old value
 			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1024); //another way to retrieve
 			await Task.Delay(110);
 
 			Assert.IsFalse(cache.TryGet("key", out _)); //expired
 
 			//now try non-factory overloads
-			Assert.IsTrue(cache.GetOrAdd("key123", 123321, TimeSpan.FromMilliseconds(100)) == 123321);
-			Assert.IsTrue(cache.GetOrAdd("key123", -1, TimeSpan.FromMilliseconds(100)) == 123321); //still old value
+			Assert.AreEqual(123321, cache.GetOrAdd("key123", 123321, TimeSpan.FromMilliseconds(100)));
+			Assert.AreEqual(123321, cache.GetOrAdd("key123", -1, TimeSpan.FromMilliseconds(100))); //still old value
 			await Task.Delay(110);
-			Assert.IsTrue(cache.GetOrAdd("key123", -1, TimeSpan.FromMilliseconds(100)) == -1); //new value
+			Assert.AreEqual(-1, cache.GetOrAdd("key123", -1, TimeSpan.FromMilliseconds(100))); //new value
 		}
 
 
@@ -137,12 +137,12 @@ namespace UnitTests
 			var cache = new FastCache<string, int>();
 			cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
 
-			Assert.AreEqual(cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100)), 1024); //old value
+			Assert.AreEqual(1024, cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100))); //old value
 			Assert.IsTrue(cache.TryGet("key", out int res) && res == 1024); //another way to retrieve
 			
 			await Task.Delay(110); //let the item expire
 
-			Assert.AreEqual(cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100)), 1025); //new value
+			Assert.AreEqual(1025, cache.GetOrAdd("key", k => 1025, TimeSpan.FromMilliseconds(100))); //new value
 			Assert.IsTrue(cache.TryGet("key", out res) && res == 1025); //another way to retrieve
 		}
 
@@ -158,10 +158,10 @@ namespace UnitTests
 			Assert.IsFalse(cache.TryGet("key", out _));
 
 			//now try without "TryGet"
-			Assert.IsTrue(cache.GetOrAdd("key2", (k, arg) => 21 + arg.Length, TimeSpan.FromMilliseconds(100), "123") == 24);
-			Assert.IsTrue(cache.GetOrAdd("key2", (k, arg) => 2211 + arg.Length, TimeSpan.FromMilliseconds(100), "123") == 24);
+			Assert.AreEqual(24, cache.GetOrAdd("key2", (k, arg) => 21 + arg.Length, TimeSpan.FromMilliseconds(100), "123"));
+			Assert.AreEqual(24, cache.GetOrAdd("key2", (k, arg) => 2211 + arg.Length, TimeSpan.FromMilliseconds(100), "123"));
 			await Task.Delay(110);
-			Assert.IsTrue(cache.GetOrAdd("key2", (k, arg) => 2211 + arg.Length, TimeSpan.FromMilliseconds(100), "123") == 2214);
+			Assert.AreEqual(2214, cache.GetOrAdd("key2", (k, arg) => 2211 + arg.Length, TimeSpan.FromMilliseconds(100), "123"));
 		}
 
 		[TestMethod]
@@ -172,7 +172,7 @@ namespace UnitTests
 
 			cache.Clear();
 
-			Assert.IsTrue(!cache.TryGet("key", out int res));
+			Assert.IsFalse(cache.TryGet("key", out int res));
 		}
 
 		[TestMethod]
@@ -190,7 +190,7 @@ namespace UnitTests
 					i++;
 			});
 
-			Assert.IsTrue(i == 1, i.ToString());
+			Assert.AreEqual(1, i);
 		}
 
 		//this text can occasionally fail becasue factory is not guaranteed to be called only once. only panic if it fails ALL THE TIME
@@ -211,7 +211,7 @@ namespace UnitTests
 
 			//test that only the first value was added
 			cache.TryGet(42, out i);
-			Assert.IsTrue(i == 1, i.ToString());
+			Assert.AreEqual(1, i);
 		}
 
 		[TestMethod]
@@ -220,7 +220,7 @@ namespace UnitTests
 			var cache = new FastCache<string, int>(); //now with default cleanup interval
 			cache.GetOrAdd("key", k => 1024, TimeSpan.FromMilliseconds(100));
 
-			Assert.IsTrue(cache.FirstOrDefault().Value == 1024);
+			Assert.AreEqual(1024, cache.FirstOrDefault().Value);
 
 			await Task.Delay(110);
 
@@ -235,14 +235,14 @@ namespace UnitTests
 
 			await Task.Delay(50);
 			Assert.IsTrue(_cache.TryGet(42, out int result)); //not evicted
-			Assert.IsTrue(result == 42);
+			Assert.AreEqual(42, result);
 
 			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(300));
 
 			await Task.Delay(250);
 
 			Assert.IsTrue(_cache.TryGet(42, out int result2)); //still not evicted
-			Assert.IsTrue(result2 == 42);
+			Assert.AreEqual(42, result2);
 		}
 	}
 }

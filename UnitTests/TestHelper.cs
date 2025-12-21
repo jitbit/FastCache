@@ -1,4 +1,6 @@
-﻿namespace UnitTests
+﻿[assembly: Parallelize(Workers = 3, Scope = ExecutionScope.ClassLevel)]
+
+namespace UnitTests
 {
 	internal class TestHelper
 	{
