@@ -234,7 +234,7 @@ namespace UnitTests
             int callCount = 0;
 
             // Act
-            cache.AddOrUpdate("key1", () => { callCount++; return 42; }, TimeSpan.FromMinutes(1));
+            cache.AddOrUpdate("key1", _ => { callCount++; return 42; }, (_, _) => { callCount++; return 43; }, TimeSpan.FromMinutes(1));
             bool exists = cache.TryGet("key1", out int value);
 
             // Assert
@@ -243,10 +243,10 @@ namespace UnitTests
             Assert.AreEqual(1, callCount); // Factory should be called exactly once
 
             callCount = 0;
-            cache.AddOrUpdate("key1", () => { callCount++; return 43; }, TimeSpan.FromMinutes(1));
+            cache.AddOrUpdate("key1", _ => { callCount++; return 44; }, (_, _) => { callCount++; return 45; }, TimeSpan.FromMinutes(1));
             exists = cache.TryGet("key1", out value);
             Assert.IsTrue(exists);
-            Assert.AreEqual(43, value);
+            Assert.AreEqual(45, value);
             Assert.AreEqual(1, callCount); // Factory should be called exactly once
         }
     }

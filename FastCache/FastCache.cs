@@ -125,13 +125,14 @@ namespace Jitbit.Utils
 		/// Factory pattern overload. Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL, essentially "sliding expiration".
 		/// </summary>
 		/// <param name="key">The key to add or update</param>
-		/// <param name="valueFactory">The factory function used to generate the item for the key</param>
+		/// <param name="addValueFactory">The factory function used to generate the item for the key</param>
+		/// <param name="updateValueFactory">The factory function used to update the item for the key</param>
 		/// <param name="ttl">TTL of the item</param>
-		public void AddOrUpdate(TKey key, Func<TValue> valueFactory, TimeSpan ttl)
+		public void AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory, TimeSpan ttl)
 		{
 			_dict.AddOrUpdate(key,
-				addValueFactory: _ => new TtlValue(valueFactory(), ttl),
-				updateValueFactory: (_, _) => new TtlValue(valueFactory(), ttl));
+				addValueFactory: k => new TtlValue(addValueFactory(k), ttl),
+				updateValueFactory: (k, v) => new TtlValue(updateValueFactory(k, v.Value), ttl));
 		}
 
 		/// <summary>
