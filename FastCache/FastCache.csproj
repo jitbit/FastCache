@@ -1,38 +1,38 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
-		<LangVersion>latest</LangVersion>
-		<PackageId>Jitbit.FastCache</PackageId>
-		<Title>FastCache</Title>
-		<Authors>Alex from Jitbit</Authors>
-		<Product>FastCache</Product>
-		<PackageProjectUrl>https://github.com/jitbit/fastcache</PackageProjectUrl>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<RepositoryUrl>https://github.com/jitbit/fastcache</RepositoryUrl>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Version>1.1.3</Version>
-		<PackageTags>cache;caching;MemoryCache</PackageTags>
-		<Description>Fastest in-memory cache for .NET</Description>
-		<GenerateDocumentationFile>True</GenerateDocumentationFile>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <PackageId>Jitbit.FastCache</PackageId>
+    <Title>FastCache</Title>
+    <Authors>Alex from Jitbit</Authors>
+    <Product>FastCache</Product>
+    <PackageProjectUrl>https://github.com/jitbit/fastcache</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/jitbit/fastcache</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Version>1.1.3</Version>
+    <PackageTags>cache;caching;MemoryCache</PackageTags>
+    <Description>Fastest in-memory cache for .NET</Description>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<None Include="..\LICENSE">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-		<None Include="..\README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-	</ItemGroup>
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Include="Backport.System.Threading.Lock" Version="3.1.5">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>analyzers</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Include="Backport.System.Threading.Lock" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>
