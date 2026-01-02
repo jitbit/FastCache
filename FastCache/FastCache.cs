@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace Jitbit.Utils
 {
+	internal static class FastCacheStatics
+	{
+		internal static readonly SemaphoreSlim GlobalStaticLock = new(1); //moved this static field to separate class, otherwise a static field in a generic class is not a true singleton
+	}
+
 	/// <summary>
 	/// faster MemoryCache alternative. basically a concurrent dictionary with expiration
 	/// </summary>
@@ -35,7 +40,6 @@ namespace Jitbit.Utils
 			_cleanUpTimer = new Timer(s => { _ = EvictExpiredJob(); }, null, cleanupJobInterval, cleanupJobInterval);
 		}
 
-		private static SemaphoreSlim _globalStaticLock = new(1);
 		private async Task EvictExpiredJob()
 		{
 			//if an applicaiton has many-many instances of FastCache objects, make sure the timer-based
@@ -46,13 +50,13 @@ namespace Jitbit.Utils
 
 			//use Semaphore instead of a "lock" to free up thread, otherwise - possible thread starvation
 
-			await _globalStaticLock.WaitAsync()
+			await FastCacheStatics.GlobalStaticLock.WaitAsync()
 				.ConfigureAwait(false);
 			try
 			{
 				EvictExpired();
 			}
-			finally { _globalStaticLock.Release(); }
+			finally { FastCacheStatics.GlobalStaticLock.Release(); }
 		}
 
 		/// <summary>
@@ -106,7 +110,7 @@ namespace Jitbit.Utils
 		public void Clear() => _dict.Clear();
 
 		/// <summary>
-		/// Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL.
+		/// Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL, essentially "sliding expiration".
 		/// </summary>
 		/// <param name="key">The key to add</param>
 		/// <param name="value">The value to add</param>
@@ -115,7 +119,21 @@ namespace Jitbit.Utils
 		{
 			var ttlValue = new TtlValue(value, ttl);
 
-			_dict.AddOrUpdate(key, (k, c) => c, (k, v, c) => c, ttlValue);
+			_dict.AddOrUpdate(key, static (_, c) => c, static (_, _, c) => c, ttlValue);
+		}
+
+		/// <summary>
+		/// Factory pattern overload. Adds an item to cache if it does not exist, updates the existing item otherwise. Updating an item resets its TTL, essentially "sliding expiration".
+		/// </summary>
+		/// <param name="key">The key to add or update</param>
+		/// <param name="addValueFactory">The factory function used to generate the item for the key</param>
+		/// <param name="updateValueFactory">The factory function used to update the item for the key</param>
+		/// <param name="ttl">TTL of the item</param>
+		public void AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory, TimeSpan ttl)
+		{
+			_dict.AddOrUpdate(key,
+				addValueFactory: k => new TtlValue(addValueFactory(k), ttl),
+				updateValueFactory: (k, v) => new TtlValue(updateValueFactory(k, v.Value), ttl));
 		}
 
 		/// <summary>
@@ -171,7 +189,7 @@ namespace Jitbit.Utils
 				 * 
 				 * */
 
-				Task.Run(() => OnEviction(key));
+				OnEviction(key);
 
 				return false;
 			}
@@ -200,7 +218,7 @@ namespace Jitbit.Utils
 			bool wasAdded = false; //flag to indicate "add vs get". TODO: wrap in ref type some day to avoid captures/closures
 			var ttlValue = _dict.GetOrAdd(
 				key,
-				(k) =>
+				(_) =>
 				{
 					wasAdded = true;
 					return new TtlValue(valueFactory(), ttl);
@@ -211,7 +229,7 @@ namespace Jitbit.Utils
 			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
 			{
 				if (ttlValue.ModifyIfExpired(valueFactory, ttl))
-					Task.Run(() => OnEviction(key));
+					OnEviction(key);
 			}
 
 			return ttlValue.Value;

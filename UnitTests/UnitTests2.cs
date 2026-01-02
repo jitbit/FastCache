@@ -203,7 +203,7 @@ namespace UnitTests
             var items = cache.ToList();
 
             // Assert
-            Assert.AreEqual(1, items.Count);
+            Assert.HasCount(1, items);
             Assert.AreEqual(42, items[0].Value);
             Assert.AreEqual("key1", items[0].Key);
         }
@@ -224,6 +224,30 @@ namespace UnitTests
             Assert.IsFalse(cache.TryGet("key1", out _));
             Assert.IsTrue(cache.TryGet("key2", out int value));
             Assert.AreEqual(43, value);
+        }
+
+        [TestMethod]
+        public void AddOrUpdate_WithFactory()
+        {
+            // Arrange
+            var cache = new FastCache<string, int>();
+            int callCount = 0;
+
+            // Act
+            cache.AddOrUpdate("key1", _ => { callCount++; return 42; }, (_, _) => { callCount++; return 43; }, TimeSpan.FromMinutes(1));
+            bool exists = cache.TryGet("key1", out int value);
+
+            // Assert
+            Assert.IsTrue(exists);
+            Assert.AreEqual(42, value);
+            Assert.AreEqual(1, callCount); // Factory should be called exactly once
+
+            callCount = 0;
+            cache.AddOrUpdate("key1", _ => { callCount++; return 44; }, (_, _) => { callCount++; return 45; }, TimeSpan.FromMinutes(1));
+            exists = cache.TryGet("key1", out value);
+            Assert.IsTrue(exists);
+            Assert.AreEqual(45, value);
+            Assert.AreEqual(1, callCount); // Factory should be called exactly once
         }
     }
 }

@@ -6,8 +6,8 @@ namespace UnitTests;
 [TestClass]
 public class EvictionCallbackTests
 {
-    private List<string> _evictedKeys;
-    private FastCache<string, string> _cache;
+    private List<string> _evictedKeys = new();
+    private FastCache<string, string> _cache = new();
 
     [TestInitialize]
     public void Setup()
@@ -29,7 +29,7 @@ public class EvictionCallbackTests
         await Task.Delay(120); // Wait for expiration background job
 
         // Assert
-        Assert.AreEqual(1, _evictedKeys.Count);
+        Assert.HasCount(1, _evictedKeys);
         Assert.AreEqual(key, _evictedKeys[0]);
     }
 
@@ -62,7 +62,7 @@ public class EvictionCallbackTests
         _cache.EvictExpired();
 
         // Assert
-        Assert.AreEqual(0, _evictedKeys.Count);
+        Assert.IsEmpty(_evictedKeys);
     }
 
     [TestMethod]
@@ -75,6 +75,6 @@ public class EvictionCallbackTests
         await Task.Delay(120); // Wait for cleanup job
 
         // Assert
-        Assert.AreEqual(1, _evictedKeys.Count);
+        Assert.HasCount(1, _evictedKeys);
     }
 }
