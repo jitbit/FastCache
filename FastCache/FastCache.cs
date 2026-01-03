@@ -66,7 +66,7 @@ namespace Jitbit.Utils
 		public void EvictExpired()
 		{
 			//Eviction already started by another thread? forget it, lets move on
-			if (_lock.TryEnter()) //use the timer-object for our lock, it's local, private and instance-type, so its ok
+			if (_lock.TryEnter()) //use the new System.Threading.Lock class for faster locking in .NET9+
 			{
 				List<TKey> evictedKeys = null; // Batch eviction callbacks
 				try
