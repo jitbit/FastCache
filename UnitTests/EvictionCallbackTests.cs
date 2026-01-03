@@ -1,4 +1,3 @@
-using System;
 using Jitbit.Utils;
 
 namespace UnitTests;

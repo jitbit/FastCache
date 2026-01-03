@@ -9,7 +9,7 @@ BenchmarkRunner.Run<BenchMark>();
 [ShortRunJob, MemoryDiagnoser]
 public class BenchMark
 {
-	private static FastCache<string, int> _cache = new FastCache<string, int>(600_000);
+	private static FastCache<string, int> _cache = new(600_000);
 	private static ConcurrentDictionary<string, int> _dict = new();
 
 	private static DateTime _dtPlus10Mins = DateTime.Now.AddMinutes(10);
