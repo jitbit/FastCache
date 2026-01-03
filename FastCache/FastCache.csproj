@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
     <PackageId>Jitbit.FastCache</PackageId>
     <Title>FastCache</Title>
     <Authors>Alex from Jitbit</Authors>
