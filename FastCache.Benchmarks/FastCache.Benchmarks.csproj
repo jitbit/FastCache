@@ -1,19 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" />
-    <PackageReference Include="System.Runtime.Caching" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="BenchmarkDotNet" />
+		<PackageReference Include="System.Runtime.Caching" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\FastCache\FastCache.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\FastCache\FastCache.csproj" />
+	</ItemGroup>
 
 </Project>

@@ -1,9 +1,5 @@
-using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Jitbit.Utils;
 
@@ -15,9 +11,9 @@ internal static class FastCacheStatics
 /// <summary>
 /// faster MemoryCache alternative. basically a concurrent dictionary with expiration
 /// </summary>
-public class FastCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable
+public class FastCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable where TKey : notnull
 {
-	private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new ConcurrentDictionary<TKey, TtlValue>();
+	private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new();
 
 	private readonly Lock _lock = new();
 	private readonly Timer _cleanUpTimer;
