@@ -276,7 +276,7 @@ public class FastCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, 
 	public bool TryRemove(TKey key, out TValue value)
 	{
 		bool res = _dict.TryRemove(key, out var ttlValue) && !ttlValue.IsExpired();
-		value = res ? ttlValue.Value : default(TValue);
+		value = res ? ttlValue.Value : default;
 		return res;
 	}
 
