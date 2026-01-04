@@ -17,7 +17,7 @@ namespace Jitbit.Utils
 	/// </summary>
 	public class FastCache<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable
 	{
-		private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new ConcurrentDictionary<TKey, TtlValue>();
+		private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new();
 
 		private readonly Lock _lock = new();
 		private readonly Timer _cleanUpTimer;
@@ -144,7 +144,7 @@ namespace Jitbit.Utils
 		/// <returns>True if value exists, otherwise false</returns>
 		public bool TryGet(TKey key, out TValue value)
 		{
-			value = default(TValue);
+			value = default;
 
 			if (!_dict.TryGetValue(key, out TtlValue ttlValue))
 				return false; //not found
@@ -280,7 +280,7 @@ namespace Jitbit.Utils
 		public bool TryRemove(TKey key, out TValue value)
 		{
 			bool res = _dict.TryRemove(key, out var ttlValue) && !ttlValue.IsExpired();
-			value = res ? ttlValue.Value : default(TValue);
+			value = res ? ttlValue.Value : default;
 			return res;
 		}
 
