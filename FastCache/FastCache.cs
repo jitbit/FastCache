@@ -19,7 +19,11 @@ namespace Jitbit.Utils
 	{
 		private readonly ConcurrentDictionary<TKey, TtlValue> _dict = new();
 
+#if NET9_0_OR_GREATER
 		private readonly Lock _lock = new();
+#else
+		private readonly object _lock = new();
+#endif
 		private readonly Timer _cleanUpTimer;
 		private readonly EvictionCallback _itemEvicted;
 
@@ -66,7 +70,11 @@ namespace Jitbit.Utils
 		public void EvictExpired()
 		{
 			//Eviction already started by another thread? forget it, lets move on
+#if NET9_0_OR_GREATER
 			if (_lock.TryEnter()) //use the new System.Threading.Lock class for faster locking in .NET9+
+#else
+			if (Monitor.TryEnter(_lock))
+#endif
 			{
 				List<TKey> evictedKeys = null; // Batch eviction callbacks
 				try
@@ -91,7 +99,11 @@ namespace Jitbit.Utils
 				}
 				finally
 				{
-                    _lock.Exit();
+#if NET9_0_OR_GREATER
+					_lock.Exit();
+#else
+					Monitor.Exit(_lock);
+#endif
 				}
 
 				// Trigger batched eviction callbacks outside the loop to prevent flooding the thread pool
