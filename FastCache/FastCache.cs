@@ -219,10 +219,15 @@ namespace Jitbit.Utils
 		/// <returns>True if value was added, otherwise false (already exists)</returns>
 		public bool TryAdd(TKey key, TValue value, TimeSpan ttl)
 		{
-			if (TryGet(key, out _))
+			if (_dict.TryAdd(key, new TtlValue(value, ttl)))
+				return true;
+
+			// Key exists — but might be expired, check that
+			if (!_dict.TryGetValue(key, out var existing) || !existing.IsExpired())
 				return false;
 
-			return _dict.TryAdd(key, new TtlValue(value, ttl));
+			// Expired — try to replace it atomically (only one thread wins)
+			return _dict.TryUpdate(key, new TtlValue(value, ttl), existing);
 		}
 
 		private TValue GetOrAddCore(TKey key, Func<TValue> valueFactory, TimeSpan ttl)
