@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -230,24 +231,17 @@ namespace Jitbit.Utils
 			return _dict.TryUpdate(key, new TtlValue(value, ttl), existing);
 		}
 
-		private TValue GetOrAddCore(TKey key, Func<TValue> valueFactory, TimeSpan ttl)
+		private TValue GetOrAddCore<TArg>(TKey key, Func<TKey, TArg, TValue> valueFactory, TArg factoryArg, long ttlMs)
 		{
-			bool wasAdded = false; //flag to indicate "add vs get". TODO: wrap in ref type some day to avoid captures/closures
 			var ttlValue = _dict.GetOrAdd(
 				key,
-				(_) =>
-				{
-					wasAdded = true;
-					return new TtlValue(valueFactory(), ttl);
-				});
+				static (k, arg) => new TtlValue(arg.valueFactory(k, arg.factoryArg), arg.ttlMs),
+				(valueFactory, factoryArg, ttlMs));
 
 			//if the item is expired, update value and TTL
 			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
-			if (!wasAdded) //performance hack: skip expiration check if a brand item was just added
-			{
-				if (ttlValue.ModifyIfExpired(valueFactory, ttl))
-					OnEviction(key);
-			}
+			if (ttlValue.ModifyIfExpired(static args => args.valueFactory(args.key, args.factoryArg), (valueFactory, key, factoryArg), ttlMs))
+				OnEviction(key);
 
 			return ttlValue.Value;
 		}
@@ -259,7 +253,7 @@ namespace Jitbit.Utils
 		/// <param name="valueFactory">The factory function used to generate the item for the key</param>
 		/// <param name="ttl">TTL of the item</param>
 		public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)
-			=> GetOrAddCore(key, () => valueFactory(key), ttl);
+			=> GetOrAddCore(key, static (k, f) => f(k), valueFactory, (long)ttl.TotalMilliseconds);
 
 		/// <summary>
 		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
@@ -269,7 +263,7 @@ namespace Jitbit.Utils
 		/// <param name="ttl">TTL of the item</param>
 		/// <param name="factoryArgument">Argument value to pass into valueFactory</param>
 		public TValue GetOrAdd<TArg>(TKey key, Func<TKey, TArg, TValue> valueFactory, TimeSpan ttl, TArg factoryArgument)
-			=> GetOrAddCore(key, () => valueFactory(key, factoryArgument), ttl);
+			=> GetOrAddCore(key, static (k, args) => args.valueFactory(k, args.factoryArgument), (valueFactory, factoryArgument), (long)ttl.TotalMilliseconds);
 
 		/// <summary>
 		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
@@ -278,7 +272,7 @@ namespace Jitbit.Utils
 		/// <param name="value">The value to add</param>
 		/// <param name="ttl">TTL of the item</param>
 		public TValue GetOrAdd(TKey key, TValue value, TimeSpan ttl)
-			=> GetOrAddCore(key, () => value, ttl);
+			=> GetOrAddCore(key, static (_, v) => v, value, (long)ttl.TotalMilliseconds);
 
 		/// <summary>
 		/// Tries to remove item with the specified key
@@ -355,6 +349,12 @@ namespace Jitbit.Utils
 			public TValue Value { get; private set; }
 			private long TickCountWhenToKill;
 
+			public TtlValue(TValue value, long ttlMs)
+			{
+				Value = value;
+				TickCountWhenToKill = Environment.TickCount64 + ttlMs;
+			}
+
 			public TtlValue(TValue value, TimeSpan ttl)
 			{
 				Value = value;
@@ -369,16 +369,16 @@ namespace Jitbit.Utils
 			public bool IsExpired(long currTime) => currTime > TickCountWhenToKill;
 
 			/// <summary>
-			/// Updates the value and TTL only if the item is expired
+			/// Updates the value and TTL only if the item is expired, using a factory function
 			/// </summary>
 			/// <returns>True if the item expired and was updated, otherwise false</returns>
-			public bool ModifyIfExpired(Func<TValue> newValueFactory, TimeSpan newTtl)
+			public bool ModifyIfExpired<TArg>(Func<TArg, TValue> newValueFactory, TArg arg, long ttlMs)
 			{
 				var ticks = Environment.TickCount64; //save to a var to prevent multiple calls to Environment.TickCount64
 				if (IsExpired(ticks)) //if expired - update the value and TTL
 				{
-					TickCountWhenToKill = ticks + (long)newTtl.TotalMilliseconds; //update the expiration time first for better concurrency
-					Value = newValueFactory();
+					TickCountWhenToKill = ticks + ttlMs; //update the expiration time first for better concurrency
+					Value = newValueFactory(arg);
 					return true;
 				}
 				return false;
