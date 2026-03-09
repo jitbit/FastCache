@@ -361,9 +361,11 @@ namespace Jitbit.Utils
 				TickCountWhenToKill = Environment.TickCount64 + (long)ttl.TotalMilliseconds;
 			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool IsExpired() => IsExpired(Environment.TickCount64);
 
 			//use an overload instead of optional param to avoid extra IF's
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool IsExpired(long currTime) => currTime > TickCountWhenToKill;
 
 			/// <summary>
