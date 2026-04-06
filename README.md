@@ -89,3 +89,86 @@ FastCache uses `Environment.TickCount` to monitor items' TTL. `Environment.TickC
 The above is no longer valid, we have switched to .NET 6 targeting and now use `TickCount64` which is free of this problem.
 
 Another tradeoff: MemoryCache watches memory usage, and evicts items once it senses memory pressure. **FastCache does not do any of that** it is up to you to keep your caches reasonably sized. After all, it's just a dictionary.
+
+## API Reference
+
+### `FastCache<TKey, TValue>`
+
+Implements `IEnumerable<KeyValuePair<TKey, TValue>>`, `IDisposable`.
+
+#### Constructor
+
+```csharp
+FastCache(int cleanupJobInterval = 10000, EvictionCallback itemEvicted = null)
+```
+
+Creates a new empty cache instance.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `cleanupJobInterval` | `int` | `10000` | Background cleanup interval in milliseconds |
+| `itemEvicted` | `EvictionCallback` | `null` | Optional callback when an item is evicted (runs on thread pool) |
+
+#### Methods
+
+##### `AddOrUpdate(TKey key, TValue value, TimeSpan ttl)`
+
+Adds an item to cache or updates it if it already exists. Updating resets the TTL (sliding expiration).
+
+##### `AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory, TimeSpan ttl)`
+
+Factory overload. Uses `addValueFactory` when the key is new, `updateValueFactory` when it exists.
+
+##### `TryGet(TKey key, out TValue value)` → `bool`
+
+Attempts to get a value by key. Returns `true` if found and not expired.
+
+##### `TryAdd(TKey key, TValue value, TimeSpan ttl)` → `bool`
+
+Attempts to add a key/value item. Returns `false` if the key already exists (and is not expired).
+
+##### `GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)` → `TValue`
+
+Returns existing value if cached, otherwise calls the factory to create, cache, and return it.
+
+##### `GetOrAdd(TKey key, TValue value, TimeSpan ttl)` → `TValue`
+
+Returns existing value if cached, otherwise adds the provided value and returns it.
+
+##### `GetOrAdd<TArg>(TKey key, Func<TKey, TArg, TValue> valueFactory, TimeSpan ttl, TArg factoryArgument)` → `TValue`
+
+Same as `GetOrAdd` but accepts a `factoryArgument` to avoid closure allocations.
+
+##### `Touch(TKey key, TimeSpan ttl)`
+
+Resets the TTL for an existing (non-expired) item — sliding expiration.
+
+##### `Remove(TKey key)`
+
+Removes the item with the specified key.
+
+##### `TryRemove(TKey key, out TValue value)` → `bool`
+
+Removes the item and returns the removed value. Returns `false` if not found or expired.
+
+##### `EvictExpired()`
+
+Manually triggers cleanup of expired items. Rarely needed since `TryGet` checks TTL anyway.
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Count` | `int` | Total item count, including expired items not yet cleaned up |
+
+#### `Clear()`
+
+Removes all items from the cache.
+
+#### Delegate
+
+```csharp
+delegate void EvictionCallback(TKey key)
+```
+
+Callback invoked (on thread pool) when an item is evicted from the cache.
