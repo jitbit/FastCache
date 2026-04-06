@@ -15,7 +15,7 @@ public class EvictionCallbackTests
         _evictedKeys = new List<string>();
         _cache = new FastCache<string, string>(
             cleanupJobInterval: 100, 
-            itemEvicted: key => _evictedKeys.Add(key));
+            itemEvicted: (key, value) => _evictedKeys.Add(key));
     }
 
     [TestMethod]

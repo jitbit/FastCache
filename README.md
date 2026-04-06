@@ -168,7 +168,7 @@ Removes all items from the cache.
 #### Delegate
 
 ```csharp
-delegate void EvictionCallback(TKey key)
+delegate void EvictionCallback(TKey key, TValue value)
 ```
 
 Callback invoked (on thread pool) when an item is evicted from the cache.

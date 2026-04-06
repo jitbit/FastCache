@@ -32,7 +32,8 @@ namespace Jitbit.Utils
 		/// Callback (RUNS ON THREAD POOL!) when an item is evicted from the cache.
 		/// </summary>
 		/// <param name="key"></param>
-		public delegate void EvictionCallback(TKey key);
+		/// <param name="value"></param>
+		public delegate void EvictionCallback(TKey key, TValue value);
 
 		/// <summary>
 		/// Initializes a new empty instance of <see cref="FastCache{TKey,TValue}"/>
@@ -77,7 +78,7 @@ namespace Jitbit.Utils
 			if (Monitor.TryEnter(_lock))
 #endif
 			{
-				List<TKey> evictedKeys = null; // Batch eviction callbacks
+				List<KeyValuePair<TKey, TValue>> evictedItems = null; // Batch eviction callbacks
 				try
 				{
 					//cache current tick count in a var to prevent calling it every iteration inside "IsExpired()" in a tight loop.
@@ -92,8 +93,8 @@ namespace Jitbit.Utils
 						{
 							if (_dict.TryRemove(p) && _itemEvicted != null) // collect key for later batch processing (only if callback exists)
 							{
-								evictedKeys ??= new List<TKey>(); //lazy initialize the list
-								evictedKeys.Add(p.Key);
+								evictedItems ??= new List<KeyValuePair<TKey, TValue>>(); //lazy initialize the list
+								evictedItems.Add(new KeyValuePair<TKey, TValue>(p.Key, p.Value.Value));
 							}
 						}
 					}
@@ -108,7 +109,7 @@ namespace Jitbit.Utils
 				}
 
 				// Trigger batched eviction callbacks outside the loop to prevent flooding the thread pool
-				OnEviction(evictedKeys);
+				OnEviction(evictedItems);
 			}
 		}
 
@@ -202,7 +203,7 @@ namespace Jitbit.Utils
 				 * 
 				 * */
 
-				OnEviction(key);
+				OnEviction(key, ttlValue.Value);
 
 				return false;
 			}
@@ -240,8 +241,9 @@ namespace Jitbit.Utils
 
 			//if the item is expired, update value and TTL
 			//since TtlValue is a reference type we can update its properties in-place, instead of removing and re-adding to the dictionary (extra lookups)
-			if (ttlValue.ModifyIfExpired(static args => args.valueFactory(args.key, args.factoryArg), (valueFactory, key, factoryArg), ttlMs))
-				OnEviction(key);
+			TValue oldValue = default;
+			if (ttlValue.ModifyIfExpired(static args => args.valueFactory(args.key, args.factoryArg), (valueFactory, key, factoryArg), ttlMs, out oldValue))
+				OnEviction(key, oldValue);
 
 			return ttlValue.Value;
 		}
@@ -324,7 +326,7 @@ namespace Jitbit.Utils
 			return this.GetEnumerator();
 		}
 
-		private void OnEviction(TKey key)
+		private void OnEviction(TKey key, TValue value)
 		{
 			if (_itemEvicted == null) return;
 
@@ -332,25 +334,25 @@ namespace Jitbit.Utils
 			{
 				try
 				{
-					_itemEvicted(key);
+					_itemEvicted(key, value);
 				}
 				catch { } //to prevent any exceptions from crashing the thread
 			});
 		}
 
-		// same as OnEviction(TKey) but for batching
-		private void OnEviction(List<TKey> keys)
+		// same as OnEviction(TKey, TValue) but for batching
+		private void OnEviction(List<KeyValuePair<TKey, TValue>> items)
 		{
-			if (keys == null || keys.Count == 0) return;
+			if (items == null || items.Count == 0) return;
 			if (_itemEvicted == null) return;
 
 			Task.Run(() => //run on thread pool to avoid blocking
 			{
 				try
 				{
-					foreach (var key in keys)
+					foreach (var item in items)
 					{
-						_itemEvicted(key);
+						_itemEvicted(item.Key, item.Value);
 					}
 				}
 				catch { } //to prevent any exceptions from crashing the thread
@@ -390,15 +392,17 @@ namespace Jitbit.Utils
 			/// Updates the value and TTL only if the item is expired, using a factory function
 			/// </summary>
 			/// <returns>True if the item expired and was updated, otherwise false</returns>
-			public bool ModifyIfExpired<TArg>(Func<TArg, TValue> newValueFactory, TArg arg, long ttlMs)
+			public bool ModifyIfExpired<TArg>(Func<TArg, TValue> newValueFactory, TArg arg, long ttlMs, out TValue oldValue)
 			{
 				var ticks = Environment.TickCount64; //save to a var to prevent multiple calls to Environment.TickCount64
 				if (IsExpired(ticks)) //if expired - update the value and TTL
 				{
+					oldValue = Value;
 					TickCountWhenToKill = ticks + ttlMs; //update the expiration time first for better concurrency
 					Value = newValueFactory(arg);
 					return true;
 				}
+				oldValue = default;
 				return false;
 			}
 		}
