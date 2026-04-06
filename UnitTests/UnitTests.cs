@@ -244,5 +244,19 @@ namespace UnitTests
 			Assert.IsTrue(_cache.TryGet(42, out int result2)); //still not evicted
 			Assert.AreEqual(42, result2);
 		}
+
+		[TestMethod]
+		public async Task TestTouch()
+		{
+			using var _cache = new FastCache<int, int>();
+			_cache.AddOrUpdate(42, 42, TimeSpan.FromMilliseconds(200));
+
+			await Task.Delay(150);
+			_cache.Touch(42, TimeSpan.FromMilliseconds(200)); //reset TTL
+
+			await Task.Delay(150); //300ms total, would have expired without Touch
+			Assert.IsTrue(_cache.TryGet(42, out int v));
+			Assert.AreEqual(42, v);
+		}
 	}
 }

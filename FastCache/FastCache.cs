@@ -275,6 +275,19 @@ namespace Jitbit.Utils
 			=> GetOrAddCore(key, static (_, v) => v, value, (long)ttl.TotalMilliseconds);
 
 		/// <summary>
+		/// Resets the TTL for an existing (non-expired) item, essentially implementing "sliding expiration"
+		/// </summary>
+		/// <param name="key">The key to touch</param>
+		/// <param name="ttl">The new TTL to set</param>
+		public void Touch(TKey key, TimeSpan ttl)
+		{
+			if (_dict.TryGetValue(key, out var ttlValue))
+			{
+				ttlValue.ResetExpiration(ttl);
+			}
+		}
+
+		/// <summary>
 		/// Tries to remove item with the specified key
 		/// </summary>
 		/// <param name="key">The key of the element to remove</param>
@@ -367,6 +380,11 @@ namespace Jitbit.Utils
 			//use an overload instead of optional param to avoid extra IF's
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool IsExpired(long currTime) => currTime > TickCountWhenToKill;
+
+			public void ResetExpiration(TimeSpan ttl)
+			{
+				TickCountWhenToKill = Environment.TickCount64 + (long)ttl.TotalMilliseconds;
+			}
 
 			/// <summary>
 			/// Updates the value and TTL only if the item is expired, using a factory function
