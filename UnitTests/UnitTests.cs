@@ -258,5 +258,31 @@ namespace UnitTests
 			Assert.IsTrue(_cache.TryGet(42, out int v));
 			Assert.AreEqual(42, v);
 		}
+
+		[TestMethod]
+		public void TestCompositeKey()
+		{
+			using var cache = new FastCache<(int, int), string>();
+			cache.AddOrUpdate((1, 2), "one-two", TimeSpan.FromMinutes(1));
+			cache.AddOrUpdate((2, 1), "two-one", TimeSpan.FromMinutes(1));
+
+			Assert.IsTrue(cache.TryGet((1, 2), out string v1));
+			Assert.AreEqual("one-two", v1);
+
+			Assert.IsTrue(cache.TryGet((2, 1), out string v2)); //different tuple, not overwritten
+			Assert.AreEqual("two-one", v2);
+
+			//equal-by-value tuple hits the same entry
+			var key = (1, 2);
+			Assert.IsTrue(cache.TryGet(key, out string v3));
+			Assert.AreEqual("one-two", v3);
+
+			Assert.IsFalse(cache.TryGet((3, 4), out _)); //missing key
+
+			Assert.IsTrue(cache.TryRemove((1, 2), out string removed));
+			Assert.AreEqual("one-two", removed);
+			Assert.IsFalse(cache.TryGet((1, 2), out _));
+			Assert.IsTrue(cache.TryGet((2, 1), out _)); //the other one survives
+		}
 	}
 }
