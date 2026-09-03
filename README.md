@@ -50,7 +50,7 @@ Compared to `System.Runtime.Caching.MemoryCache` and `Microsoft.Extensions.Cachi
 Install via nuget
 
 ```
-Install-Package Jitbit.FastCache
+dotnet package add Jitbit.FastCache
 ```
 
 Then use
