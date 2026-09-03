@@ -171,7 +171,10 @@ namespace Jitbit.Utils
 				//secret atomic removal method (only if both key and value match condition
 				//https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
 				//so that we don't need any locks!! woohoo
-				_dict.TryRemove(kv);
+				//"TryRemove" returning true means WE are the thread that actually evicted it,
+				//so only WE fire the callback - otherwise N threads racing on the same expired key
+				//would fire N callbacks and flood the thread pool
+				bool removedByUs = _dict.TryRemove(kv);
 
 				/* EXPLANATION:
 				 * when an item was "found but is expired" - we need to treat as "not found" and discard it.
@@ -204,7 +207,7 @@ namespace Jitbit.Utils
 				 * 
 				 * */
 
-				OnEviction(key, ttlValue.Value);
+				if (removedByUs) OnEviction(key, ttlValue.Value);
 
 				return false;
 			}

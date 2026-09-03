@@ -66,6 +66,26 @@ public class EvictionCallbackTests
     }
 
     [TestMethod]
+    public async Task WhenManyThreadsReadTheSameExpiredKey_CallbackFiresOnce()
+    {
+        // Arrange
+        int callbackCount = 0;
+        using var cache = new FastCache<string, string>(
+            cleanupJobInterval: 60_000, //keep the background job out of the way, we evict via TryGet
+            itemEvicted: (key, value) => Interlocked.Increment(ref callbackCount));
+
+        cache.AddOrUpdate("key", "value", TimeSpan.FromMilliseconds(1));
+        await Task.Delay(5); // Wait for 1ms expiration
+
+        // Act - hammer the same expired key from many threads at once
+        Parallel.For(0, 64, i => cache.TryGet("key", out _));
+        await Task.Delay(50); // Wait for callbacks to finish on the thread pool
+
+        // Assert - only the thread that actually removed the item fires the callback
+        Assert.AreEqual(1, Volatile.Read(ref callbackCount));
+    }
+
+    [TestMethod]
     public async Task AutomaticCleanup_FiresCallback()
     {
         // Arrange
