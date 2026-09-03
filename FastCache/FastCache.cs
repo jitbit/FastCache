@@ -131,9 +131,10 @@ namespace Jitbit.Utils
 		/// <param name="ttl">TTL of the item</param>
 		public void AddOrUpdate(TKey key, TValue value, TimeSpan ttl)
 		{
-			var ttlValue = new TtlValue(value, ttl);
-
-			_dict.AddOrUpdate(key, static (_, c) => c, static (_, _, c) => c, ttlValue);
+			//use the indexer instead of "AddOrUpdate": both factories would just return the value anyway,
+			//and "AddOrUpdate" is a retry loop that does TryGetValue first, i.e. two hash lookups instead of one
+			//shaves 2ns from benchmark
+			_dict[key] = new TtlValue(value, ttl);
 		}
 
 		/// <summary>
