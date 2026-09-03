@@ -225,15 +225,23 @@ namespace Jitbit.Utils
 		/// <returns>True if value was added, otherwise false (already exists)</returns>
 		public bool TryAdd(TKey key, TValue value, TimeSpan ttl)
 		{
-			if (_dict.TryAdd(key, new TtlValue(value, ttl)))
-				return true;
+			var ttlValue = new TtlValue(value, ttl);
+
+			//"GetOrAdd" hands us the existing item in the SAME lookup that would have added ours,
+			//so we don't need a separate "TryGetValue" to inspect it.
+			//"TryAdd + TryGetValue + TryUpdate" was three hash lookups, now it's one (or two if we take over an expired item)
+			var existing = _dict.GetOrAdd(key, ttlValue);
+
+			if (ReferenceEquals(existing, ttlValue))
+				return true; //nobody was there, ours went in
 
 			// Key exists — but might be expired, check that
-			if (!_dict.TryGetValue(key, out var existing) || !existing.IsExpired())
+			if (!existing.IsExpired())
 				return false;
 
-			// Expired — try to replace it atomically (only one thread wins)
-			return _dict.TryUpdate(key, new TtlValue(value, ttl), existing);
+			// Expired — try to replace it atomically (only one thread wins).
+			// Reuse our TtlValue, it was never published to the dictionary
+			return _dict.TryUpdate(key, ttlValue, existing);
 		}
 
 		private TValue GetOrAddCore<TArg>(TKey key, Func<TKey, TArg, TValue> valueFactory, TArg factoryArg, long ttlMs)
