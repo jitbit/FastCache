@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "[0-9]*"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    name: Pack and publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore FastCache/FastCache.csproj
+
+      - name: Pack
+        run: dotnet pack FastCache/FastCache.csproj --configuration Release --no-restore --output ./artifacts /p:PackageVersion="${GITHUB_REF_NAME}"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" ./artifacts/*.nupkg --title "${GITHUB_REF_NAME}" --generate-notes
+      
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: jitbit
+    
+      # Push the package
+      - name: NuGet push
+        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
