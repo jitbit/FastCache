@@ -146,9 +146,11 @@ namespace Jitbit.Utils
 		/// <param name="ttl">TTL of the item</param>
 		public void AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory, TimeSpan ttl)
 		{
+			//static lambdas + tuple state instead of closures: no closure/delegate allocations per call
 			_dict.AddOrUpdate(key,
-				addValueFactory: k => new TtlValue(addValueFactory(k), ttl),
-				updateValueFactory: (k, v) => new TtlValue(updateValueFactory(k, v.Value), ttl));
+				addValueFactory: static (k, arg) => new TtlValue(arg.addValueFactory(k), arg.ttlMs),
+				updateValueFactory: static (k, v, arg) => new TtlValue(arg.updateValueFactory(k, v.Value), arg.ttlMs),
+				factoryArgument: (addValueFactory, updateValueFactory, ttlMs: ToMs(ttl)));
 		}
 
 		/// <summary>
@@ -267,7 +269,7 @@ namespace Jitbit.Utils
 		/// <param name="valueFactory">The factory function used to generate the item for the key</param>
 		/// <param name="ttl">TTL of the item</param>
 		public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory, TimeSpan ttl)
-			=> GetOrAddCore(key, static (k, f) => f(k), valueFactory, (long)ttl.TotalMilliseconds);
+			=> GetOrAddCore(key, static (k, f) => f(k), valueFactory, ToMs(ttl));
 
 		/// <summary>
 		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
@@ -277,7 +279,7 @@ namespace Jitbit.Utils
 		/// <param name="ttl">TTL of the item</param>
 		/// <param name="factoryArgument">Argument value to pass into valueFactory</param>
 		public TValue GetOrAdd<TArg>(TKey key, Func<TKey, TArg, TValue> valueFactory, TimeSpan ttl, TArg factoryArgument)
-			=> GetOrAddCore(key, static (k, args) => args.valueFactory(k, args.factoryArgument), (valueFactory, factoryArgument), (long)ttl.TotalMilliseconds);
+			=> GetOrAddCore(key, static (k, args) => args.valueFactory(k, args.factoryArgument), (valueFactory, factoryArgument), ToMs(ttl));
 
 		/// <summary>
 		/// Adds a key/value pair by using the specified function if the key does not already exist, or returns the existing value if the key exists.
@@ -286,7 +288,7 @@ namespace Jitbit.Utils
 		/// <param name="value">The value to add</param>
 		/// <param name="ttl">TTL of the item</param>
 		public TValue GetOrAdd(TKey key, TValue value, TimeSpan ttl)
-			=> GetOrAddCore(key, static (_, v) => v, value, (long)ttl.TotalMilliseconds);
+			=> GetOrAddCore(key, static (_, v) => v, value, ToMs(ttl));
 
 		/// <summary>
 		/// Resets the TTL for an existing (non-expired) item, essentially implementing "sliding expiration"
@@ -371,7 +373,12 @@ namespace Jitbit.Utils
 			});
 		}
 
-		private class TtlValue
+		//integer division instead of "(long)ttl.TotalMilliseconds" which does a double division + clamping + cast
+		//helps save couple nanoseconds
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long ToMs(TimeSpan ttl) => ttl.Ticks / TimeSpan.TicksPerMillisecond;
+
+		private sealed class TtlValue //marked sealed. It's free and helps the JIT with type checks.
 		{
 			public TValue Value { get; private set; }
 			private long TickCountWhenToKill;
@@ -385,7 +392,7 @@ namespace Jitbit.Utils
 			public TtlValue(TValue value, TimeSpan ttl)
 			{
 				Value = value;
-				TickCountWhenToKill = Environment.TickCount64 + (long)ttl.TotalMilliseconds;
+				TickCountWhenToKill = Environment.TickCount64 + ToMs(ttl);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -397,7 +404,7 @@ namespace Jitbit.Utils
 
 			public void ResetExpiration(TimeSpan ttl)
 			{
-				TickCountWhenToKill = Environment.TickCount64 + (long)ttl.TotalMilliseconds;
+				TickCountWhenToKill = Environment.TickCount64 + ToMs(ttl);
 			}
 
 			/// <summary>
