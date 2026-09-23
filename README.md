@@ -37,13 +37,15 @@ Mac M4 Pro Max (with the new HybridCache from Microsoft.Extensions.Caching.Hybri
 |               Method |      Mean |     Error |   StdDev |   Gen0 | Allocated |
 |--------------------- |----------:|----------:|---------:|-------:|----------:|
 |     DictionaryLookup |  32.20 ns |  2.901 ns | 0.159 ns |      - |         - |
-|      FastCacheLookup |  43.81 ns |  7.000 ns | 0.384 ns |      - |         - |
+|      ✅ FastCacheLookup |  43.81 ns |  7.000 ns | 0.384 ns |      - |         - |
 |    MemoryCacheLookup | 176.64 ns | 46.725 ns | 2.561 ns | 0.0153 |     128 B |
 |    HybridCacheLookup | 102.06 ns | 24.630 ns | 1.350 ns |      - |         - |
-|    FastCacheGetOrAdd |  45.45 ns | 19.403 ns | 1.064 ns |      - |         - |
+||
+|    ✅ FastCacheGetOrAdd |  45.45 ns | 19.403 ns | 1.064 ns |      - |         - |
 |  MemoryCacheGetOrAdd | 403.67 ns | 39.693 ns | 2.176 ns | 0.1373 |    1152 B |
 |  HybridCacheGetOrAdd |  99.54 ns | 29.271 ns | 1.604 ns |      - |         - |
-|   FastCacheAddRemove |  37.80 ns |  9.034 ns | 0.495 ns | 0.0095 |      80 B |
+||
+|   ✅ FastCacheAddRemove |  37.80 ns |  9.034 ns | 0.495 ns | 0.0095 |      80 B |
 | MemoryCacheAddRemove | 185.80 ns |  6.442 ns | 0.353 ns | 0.0381 |     320 B |
 | HybridCacheAddRemove | 159.88 ns | 17.952 ns | 0.984 ns | 0.0534 |     448 B |
 
